@@ -1,408 +1,201 @@
-import { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate, useLocation } from "@/lib/router";
-import { useQuery } from "@tanstack/react-query";
-import { agentsApi, type OrgNode } from "../api/agents";
-import { heartbeatsApi } from "../api/heartbeats";
-import { useCompany } from "../context/CompanyContext";
-import { useDialog } from "../context/DialogContext";
-import { useBreadcrumbs } from "../context/BreadcrumbContext";
-import { useSidebar } from "../context/SidebarContext";
-import { queryKeys } from "../lib/queryKeys";
-import { StatusBadge } from "../components/StatusBadge";
-import { agentStatusDot, agentStatusDotDefault } from "../lib/status-colors";
-import { EntityRow } from "../components/EntityRow";
-import { EmptyState } from "../components/EmptyState";
-import { PageSkeleton } from "../components/PageSkeleton";
-import { relativeTime, cn, agentRouteRef, agentUrl } from "../lib/utils";
-import { PageTabBar } from "../components/PageTabBar";
-import { Tabs } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Bot, Plus, List, GitBranch, SlidersHorizontal } from "lucide-react";
-import { AGENT_ROLE_LABELS, type Agent } from "@paperclipai/shared";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Pause, Play, Plus, Trash2 } from "lucide-react";
+import { api } from "../lib/api";
+import { useDefaultCompany } from "../lib/company";
+import { formatRelativeTime } from "../lib/format";
+import type { Agent } from "../lib/types";
+import { AddAgentDialog } from "../components/AddAgentDialog";
 
-import { getAdapterLabel } from "../adapters/adapter-display-registry";
+export function AgentsPage() {
+  const company = useDefaultCompany();
+  const [adding, setAdding] = useState(false);
 
-const roleLabels = AGENT_ROLE_LABELS as Record<string, string>;
-
-type FilterTab = "all" | "active" | "paused" | "error";
-
-function matchesFilter(status: string, tab: FilterTab, showTerminated: boolean): boolean {
-  if (status === "terminated") return showTerminated;
-  if (tab === "all") return true;
-  if (tab === "active") return status === "active" || status === "running" || status === "idle";
-  if (tab === "paused") return status === "paused";
-  if (tab === "error") return status === "error";
-  return true;
-}
-
-function filterAgents(agents: Agent[], tab: FilterTab, showTerminated: boolean): Agent[] {
-  return agents
-    .filter((a) => matchesFilter(a.status, tab, showTerminated))
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function filterOrgTree(nodes: OrgNode[], tab: FilterTab, showTerminated: boolean): OrgNode[] {
-  return nodes
-    .reduce<OrgNode[]>((acc, node) => {
-      const filteredReports = filterOrgTree(node.reports, tab, showTerminated);
-      if (matchesFilter(node.status, tab, showTerminated) || filteredReports.length > 0) {
-        acc.push({ ...node, reports: filteredReports });
-      }
-      return acc;
-    }, [])
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-export function Agents() {
-  const { selectedCompanyId } = useCompany();
-  const { openNewAgent } = useDialog();
-  const { setBreadcrumbs } = useBreadcrumbs();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isMobile } = useSidebar();
-  const pathSegment = location.pathname.split("/").pop() ?? "all";
-  const tab: FilterTab = (pathSegment === "all" || pathSegment === "active" || pathSegment === "paused" || pathSegment === "error") ? pathSegment : "all";
-  const [view, setView] = useState<"list" | "org">("org");
-  const forceListView = isMobile;
-  const effectiveView: "list" | "org" = forceListView ? "list" : view;
-  const [showTerminated, setShowTerminated] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  const { data: agents, isLoading, error } = useQuery({
-    queryKey: queryKeys.agents.list(selectedCompanyId!),
-    queryFn: () => agentsApi.list(selectedCompanyId!),
-    enabled: !!selectedCompanyId,
+  const agents = useQuery({
+    queryKey: ["agents", company.data?.id],
+    queryFn: () => api.listAgents(company.data!.id),
+    enabled: !!company.data?.id,
+    refetchInterval: 5_000,
   });
 
-  const { data: orgTree } = useQuery({
-    queryKey: queryKeys.org(selectedCompanyId!),
-    queryFn: () => agentsApi.org(selectedCompanyId!),
-    enabled: !!selectedCompanyId && effectiveView === "org",
-  });
-
-  const { data: runs } = useQuery({
-    queryKey: [...queryKeys.liveRuns(selectedCompanyId!), "agents-page"],
-    queryFn: () => heartbeatsApi.liveRunsForCompany(selectedCompanyId!),
-    enabled: !!selectedCompanyId,
-    refetchInterval: 15_000,
-  });
-
-  // Map agentId -> first live run + live run count
-  const liveRunByAgent = useMemo(() => {
-    const map = new Map<string, { runId: string; liveCount: number }>();
-    for (const r of runs ?? []) {
-      if (r.status !== "running" && r.status !== "queued") continue;
-      const existing = map.get(r.agentId);
-      if (existing) {
-        existing.liveCount += 1;
-        continue;
-      }
-      map.set(r.agentId, { runId: r.id, liveCount: 1 });
-    }
-    return map;
-  }, [runs]);
-
-  const agentMap = useMemo(() => {
-    const map = new Map<string, Agent>();
-    for (const a of agents ?? []) map.set(a.id, a);
-    return map;
-  }, [agents]);
-
-  useEffect(() => {
-    setBreadcrumbs([{ label: "Agents" }]);
-  }, [setBreadcrumbs]);
-
-  if (!selectedCompanyId) {
-    return <EmptyState icon={Bot} message="Select a company to view agents." />;
+  if (company.isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Loader2 className="size-4 animate-spin" /> Loading…
+      </div>
+    );
   }
 
-  if (isLoading) {
-    return <PageSkeleton variant="list" />;
+  if (company.error) {
+    return (
+      <div className="text-destructive">
+        Could not reach the backend. Is it running?
+      </div>
+    );
   }
-
-  const filtered = filterAgents(agents ?? [], tab, showTerminated);
-  const filteredOrg = filterOrgTree(orgTree ?? [], tab, showTerminated);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={tab} onValueChange={(v) => navigate(`/agents/${v}`)}>
-          <PageTabBar
-            items={[
-              { value: "all", label: "All" },
-              { value: "active", label: "Active" },
-              { value: "paused", label: "Paused" },
-              { value: "error", label: "Error" },
-            ]}
-            value={tab}
-            onValueChange={(v) => navigate(`/agents/${v}`)}
-          />
-        </Tabs>
-        <div className="flex items-center gap-2">
-          {/* Filters */}
-          <div className="relative">
-            <button
-              className={cn(
-                "flex items-center gap-1.5 px-2 py-1.5 text-xs transition-colors border border-border",
-                filtersOpen || showTerminated ? "text-foreground bg-accent" : "text-muted-foreground hover:bg-accent/50"
-              )}
-              onClick={() => setFiltersOpen(!filtersOpen)}
-            >
-              <SlidersHorizontal className="h-3 w-3" />
-              Filters
-              {showTerminated && <span className="ml-0.5 px-1 bg-foreground/10 rounded text-[10px]">1</span>}
-            </button>
-            {filtersOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 w-48 border border-border bg-popover shadow-md p-1">
-                <button
-                  className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-left hover:bg-accent/50 transition-colors"
-                  onClick={() => setShowTerminated(!showTerminated)}
-                >
-                  <span className={cn(
-                    "flex items-center justify-center h-3.5 w-3.5 border border-border rounded-sm",
-                    showTerminated && "bg-foreground"
-                  )}>
-                    {showTerminated && <span className="text-background text-[10px] leading-none">&#10003;</span>}
-                  </span>
-                  Show terminated
-                </button>
-              </div>
-            )}
-          </div>
-          {/* View toggle */}
-          {!forceListView && (
-            <div className="flex items-center border border-border">
-              <button
-                className={cn(
-                  "p-1.5 transition-colors",
-                  effectiveView === "list" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50"
-                )}
-                onClick={() => setView("list")}
-              >
-                <List className="h-3.5 w-3.5" />
-              </button>
-              <button
-                className={cn(
-                  "p-1.5 transition-colors",
-                  effectiveView === "org" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50"
-                )}
-                onClick={() => setView("org")}
-              >
-                <GitBranch className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
-          <Button size="sm" variant="outline" onClick={openNewAgent}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            New Agent
-          </Button>
-        </div>
+    <div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Agents</h1>
+        <button
+          onClick={() => setAdding(true)}
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          <Plus className="size-4" /> Add Agent
+        </button>
       </div>
 
-      {filtered.length > 0 && (
-        <p className="text-xs text-muted-foreground">{filtered.length} agent{filtered.length !== 1 ? "s" : ""}</p>
+      {agents.isLoading ? (
+        <div className="mt-8 flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" /> Loading agents…
+        </div>
+      ) : agents.data && agents.data.length === 0 ? (
+        <EmptyState onAdd={() => setAdding(true)} />
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {agents.data?.map((a) => (
+            <AgentCard key={a.id} agent={a} />
+          ))}
+        </div>
       )}
 
-      {error && <p className="text-sm text-destructive">{error.message}</p>}
-
-      {agents && agents.length === 0 && (
-        <EmptyState
-          icon={Bot}
-          message="Create your first agent to get started."
-          action="New Agent"
-          onAction={openNewAgent}
+      {adding && company.data && (
+        <AddAgentDialog
+          companyId={company.data.id}
+          onClose={() => setAdding(false)}
         />
       )}
-
-      {/* List view */}
-      {effectiveView === "list" && filtered.length > 0 && (
-        <div className="border border-border">
-          {filtered.map((agent) => {
-            return (
-              <EntityRow
-                key={agent.id}
-                title={agent.name}
-                subtitle={`${roleLabels[agent.role] ?? agent.role}${agent.title ? ` - ${agent.title}` : ""}`}
-                to={agentUrl(agent)}
-                className={agent.pausedAt && tab !== "paused" ? "opacity-50" : ""}
-                leading={
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span
-                      className={`absolute inline-flex h-full w-full rounded-full ${agentStatusDot[agent.status] ?? agentStatusDotDefault}`}
-                    />
-                  </span>
-                }
-                trailing={
-                  <div className="flex items-center gap-3">
-                    <span className="sm:hidden">
-                      {liveRunByAgent.has(agent.id) ? (
-                        <LiveRunIndicator
-                          agentRef={agentRouteRef(agent)}
-                          runId={liveRunByAgent.get(agent.id)!.runId}
-                          liveCount={liveRunByAgent.get(agent.id)!.liveCount}
-                        />
-                      ) : (
-                        <StatusBadge status={agent.status} />
-                      )}
-                    </span>
-                    <div className="hidden sm:flex items-center gap-3">
-                      {liveRunByAgent.has(agent.id) && (
-                        <LiveRunIndicator
-                          agentRef={agentRouteRef(agent)}
-                          runId={liveRunByAgent.get(agent.id)!.runId}
-                          liveCount={liveRunByAgent.get(agent.id)!.liveCount}
-                        />
-                      )}
-                      <span className="text-xs text-muted-foreground font-mono w-14 text-right">
-                        {getAdapterLabel(agent.adapterType)}
-                      </span>
-                      <span className="text-xs text-muted-foreground w-16 text-right">
-                        {agent.lastHeartbeatAt ? relativeTime(agent.lastHeartbeatAt) : "—"}
-                      </span>
-                      <span className="w-20 flex justify-end">
-                        <StatusBadge status={agent.status} />
-                      </span>
-                    </div>
-                  </div>
-                }
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {effectiveView === "list" && agents && agents.length > 0 && filtered.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          No agents match the selected filter.
-        </p>
-      )}
-
-      {/* Org chart view */}
-      {effectiveView === "org" && filteredOrg.length > 0 && (
-        <div className="border border-border py-1">
-          {filteredOrg.map((node) => (
-            <OrgTreeNode key={node.id} node={node} depth={0} agentMap={agentMap} liveRunByAgent={liveRunByAgent} tab={tab} />
-          ))}
-        </div>
-      )}
-
-      {effectiveView === "org" && orgTree && orgTree.length > 0 && filteredOrg.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          No agents match the selected filter.
-        </p>
-      )}
-
-      {effectiveView === "org" && orgTree && orgTree.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          No organizational hierarchy defined.
-        </p>
-      )}
     </div>
   );
 }
 
-function OrgTreeNode({
-  node,
-  depth,
-  agentMap,
-  liveRunByAgent,
-  tab,
-}: {
-  node: OrgNode;
-  depth: number;
-  agentMap: Map<string, Agent>;
-  liveRunByAgent: Map<string, { runId: string; liveCount: number }>;
-  tab: FilterTab;
-}) {
-  const agent = agentMap.get(node.id);
-
-  const statusColor = agentStatusDot[node.status] ?? agentStatusDotDefault;
-
+function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div style={{ paddingLeft: depth * 24 }}>
-      <Link
-        to={agent ? agentUrl(agent) : `/agents/${node.id}`}
-        className={cn("flex items-center gap-3 px-3 py-2 hover:bg-accent/30 transition-colors w-full text-left no-underline text-inherit", agent?.pausedAt && tab !== "paused" && "opacity-50")}
+    <div className="mt-12 rounded-lg border border-dashed border-border p-12 text-center">
+      <h2 className="text-lg font-medium">No agents yet</h2>
+      <p className="mt-2 text-muted-foreground">
+        Add your first Claude Code agent to get started.
+      </p>
+      <button
+        onClick={onAdd}
+        className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
       >
-        <span className="relative flex h-2.5 w-2.5 shrink-0">
-          <span className={`absolute inline-flex h-full w-full rounded-full ${statusColor}`} />
-        </span>
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium">{node.name}</span>
-          <span className="text-xs text-muted-foreground ml-2">
-            {roleLabels[node.role] ?? node.role}
-            {agent?.title ? ` - ${agent.title}` : ""}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="sm:hidden">
-            {liveRunByAgent.has(node.id) ? (
-              <LiveRunIndicator
-                agentRef={agent ? agentRouteRef(agent) : node.id}
-                runId={liveRunByAgent.get(node.id)!.runId}
-                liveCount={liveRunByAgent.get(node.id)!.liveCount}
-              />
-            ) : (
-              <StatusBadge status={node.status} />
-            )}
-          </span>
-          <div className="hidden sm:flex items-center gap-3">
-            {liveRunByAgent.has(node.id) && (
-              <LiveRunIndicator
-                agentRef={agent ? agentRouteRef(agent) : node.id}
-                runId={liveRunByAgent.get(node.id)!.runId}
-                liveCount={liveRunByAgent.get(node.id)!.liveCount}
-              />
-            )}
-            {agent && (
-              <>
-                <span className="text-xs text-muted-foreground font-mono w-14 text-right">
-                  {getAdapterLabel(agent.adapterType)}
-                </span>
-                <span className="text-xs text-muted-foreground w-16 text-right">
-                  {agent.lastHeartbeatAt ? relativeTime(agent.lastHeartbeatAt) : "—"}
-                </span>
-              </>
-            )}
-            <span className="w-20 flex justify-end">
-              <StatusBadge status={node.status} />
-            </span>
-          </div>
-        </div>
-      </Link>
-      {node.reports && node.reports.length > 0 && (
-        <div className="border-l border-border/50 ml-4">
-          {node.reports.map((child) => (
-            <OrgTreeNode key={child.id} node={child} depth={depth + 1} agentMap={agentMap} liveRunByAgent={liveRunByAgent} tab={tab} />
-          ))}
-        </div>
-      )}
+        <Plus className="size-4" /> Add Agent
+      </button>
     </div>
   );
 }
 
-function LiveRunIndicator({
-  agentRef,
-  runId,
-  liveCount,
-}: {
-  agentRef: string;
-  runId: string;
-  liveCount: number;
-}) {
+function statusColor(status: Agent["status"]) {
+  switch (status) {
+    case "running":
+      return "bg-green-500/20 text-green-400";
+    case "active":
+    case "idle":
+      return "bg-blue-500/20 text-blue-400";
+    case "paused":
+      return "bg-yellow-500/20 text-yellow-400";
+    case "error":
+      return "bg-red-500/20 text-red-400";
+    case "pending_approval":
+      return "bg-purple-500/20 text-purple-400";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
+
+function AgentCard({ agent }: { agent: Agent }) {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["agents"] });
+
+  const pause = useMutation({
+    mutationFn: () => api.pauseAgent(agent.id),
+    onSuccess: invalidate,
+  });
+  const resume = useMutation({
+    mutationFn: () => api.resumeAgent(agent.id),
+    onSuccess: invalidate,
+  });
+  const remove = useMutation({
+    mutationFn: () => api.deleteAgent(agent.id),
+    onSuccess: invalidate,
+  });
+
+  const model =
+    (agent.adapterConfig?.model as string | undefined) ?? "default";
+  const cwd = agent.adapterConfig?.cwd as string | undefined;
+  const isPaused = agent.status === "paused";
+  const isPendingApproval = agent.status === "pending_approval";
+
   return (
-    <Link
-      to={`/agents/${agentRef}/runs/${runId}`}
-      className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 transition-colors no-underline"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <span className="relative flex h-2 w-2">
-        <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-      </span>
-      <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400">
-        Live{liveCount > 1 ? ` (${liveCount})` : ""}
-      </span>
-    </Link>
+    <div className="group rounded-lg border border-border bg-card shadow-sm transition-colors hover:border-primary/40">
+      <Link to={`/agents/${agent.id}`} className="block p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="font-medium group-hover:text-primary">{agent.name}</div>
+            {agent.title && (
+              <div className="text-xs text-muted-foreground">{agent.title}</div>
+            )}
+          </div>
+          <span
+            title={isPendingApproval ? "Created via Paperclip UI — can't be activated from Clipboard" : undefined}
+            className={`rounded-full px-2 py-0.5 text-xs ${statusColor(agent.status)}`}
+          >
+            {agent.status === "pending_approval" ? "pending" : agent.status}
+          </span>
+        </div>
+        {agent.capabilities && (
+          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+            {agent.capabilities}
+          </p>
+        )}
+        <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+          <div>
+            <dt className="opacity-70">Model</dt>
+            <dd className="font-mono text-foreground">{model}</dd>
+          </div>
+          <div>
+            <dt className="opacity-70">Last active</dt>
+            <dd>{formatRelativeTime(agent.lastHeartbeatAt)}</dd>
+          </div>
+          {cwd && (
+            <div className="col-span-2">
+              <dt className="opacity-70">Working directory</dt>
+              <dd className="truncate font-mono text-foreground">{cwd.replace(/\/Users\/[^/]+/, "~")}</dd>
+            </div>
+          )}
+        </dl>
+      </Link>
+      <div className="flex gap-2 border-t border-border px-4 py-3">
+        {isPaused ? (
+          <button
+            onClick={() => resume.mutate()}
+            disabled={resume.isPending}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+          >
+            <Play className="size-3.5" /> Resume
+          </button>
+        ) : (
+          <button
+            onClick={() => pause.mutate()}
+            disabled={pause.isPending || isPendingApproval}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+          >
+            <Pause className="size-3.5" /> Pause
+          </button>
+        )}
+        <button
+          onClick={() => {
+            if (confirm(`Remove agent "${agent.name}"?`)) remove.mutate();
+          }}
+          disabled={remove.isPending}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }

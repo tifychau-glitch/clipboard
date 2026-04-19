@@ -18,6 +18,9 @@ cli/tmp/
 # Scratch/seed scripts (but not scripts/ dir)
 check-*.mjs
 !scripts/check-*.mjs
+
+# Clipboard delegation audit log (runtime data, not source)
+scripts/delegation_audit.log
 new-agent*.json
 newcompany.json
 seed-*.mjs
