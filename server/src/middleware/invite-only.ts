@@ -104,6 +104,20 @@ export function inviteOnlyMiddleware(opts: InviteOnlyOptions = {}): RequestHandl
   const forbiddenHtml = renderForbiddenPage(contactEmail);
 
   return (req, res, next) => {
+    // Always let the health check through. Railway's probe hits /api/health
+    // unauthenticated; gating it would make the deploy fail with 403 even
+    // though the app is healthy. This middleware is mounted on /api, so
+    // req.path resolves to "/health", but we also accept the absolute
+    // original path for safety if the mount ever changes.
+    if (
+      req.path === "/health" ||
+      req.path === "/api/health" ||
+      req.originalUrl === "/api/health" ||
+      req.originalUrl.startsWith("/api/health?")
+    ) {
+      return next();
+    }
+
     const actor = req.actor;
     // Gate only interactive human sessions. Agent JWTs, provisioned board
     // API keys, and the local_trusted implicit board actor are all

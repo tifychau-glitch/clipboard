@@ -305,9 +305,14 @@ export function loadConfig(): Config {
     databaseBackupIntervalMinutes,
     databaseBackupRetentionDays,
     databaseBackupDir,
+    // Accept the common truthy spellings. Railway (and similar PaaS) sometimes
+    // auto-set env vars to "1" or uppercase variants; the previous strict
+    // `=== "true"` check silently disabled the UI in those cases.
     serveUi:
       process.env.SERVE_UI !== undefined
-        ? process.env.SERVE_UI === "true"
+        ? ["true", "1", "yes", "on"].includes(
+            process.env.SERVE_UI.trim().toLowerCase(),
+          )
         : fileConfig?.server.serveUi ?? true,
     uiDevMiddleware: process.env.PAPERCLIP_UI_DEV_MIDDLEWARE === "true",
     secretsProvider,
