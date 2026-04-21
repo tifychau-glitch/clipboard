@@ -24,6 +24,7 @@
 | Variable | Purpose |
 |---|---|
 | `BETTER_AUTH_SECRET` | 32+ random hex chars. Signs auth session cookies. Generate with:<br>`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `BETTER_AUTH_URL` | Your Railway app's public URL, e.g. `https://clipboard-abc123.railway.app`. Better Auth uses this to build OAuth callback URLs and validate redirects. Without it, Google sign-in callbacks will fail. Set this to whatever URL Railway assigns to your deploy. |
 | `PAPERCLIP_AGENT_JWT_SECRET` | Another 32+ random hex chars, **different** from `BETTER_AUTH_SECRET`. Signs agent JWTs used by long-running adapter processes. |
 | `DATABASE_URL` | Set automatically when you attach the PostgreSQL service. Format: `postgresql://user:password@host:port/dbname`. |
 

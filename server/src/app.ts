@@ -136,6 +136,22 @@ export async function createApp(
 ) {
   const app = express();
 
+  // Railway / platform healthcheck endpoints. Registered BEFORE every other
+  // middleware (json parser, httpLogger, privateHostnameGuard, actorMiddleware,
+  // Better Auth, boardMutationGuard) so external probes always succeed
+  // regardless of deployment mode, Host-header allowlists, or auth state.
+  // The richer, DB-probing /api/health exposed by healthRoutes still
+  // mounts below for authenticated callers — these handlers short-circuit
+  // on an exact path match and never reach that router.
+  const platformHealthHandler = (
+    _req: ExpressRequest,
+    res: express.Response,
+  ) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  };
+  app.get("/api/health", platformHealthHandler);
+  app.get("/health", platformHealthHandler);
+
   app.use(express.json({
     // Company import/export payloads can inline full portable packages.
     limit: "10mb",
