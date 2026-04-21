@@ -447,6 +447,14 @@ POST   /approvals/:id/reject                         reject a pending hire
 
 ---
 
+## Deferred upstream changes
+
+**#4122 plugins.ts authz hardening** — The authorization hardening from commit 7a329fb8 was applied to all routes except server/src/routes/plugins.ts, which was kept at our stripped version. If the plugin system is ever re-enabled in a future version of Clipboard, revisit upstream commit 7a329fb8 to apply the missing authz changes to that route before shipping.
+
+**#4114 plugin database namespaces (migration 0059)** — Deliberately skipped. Adds database schema for plugin namespacing. Not applicable while plugin system is stripped. Do not apply this migration unless plugin system is restored.
+
+---
+
 ## Files to Read for Deeper Context
 
 - `ui/src/lib/types.ts` — all types + helpers (`isMeteredAgent`, `isCeoAgent`, `findCeoAgent`, run accessors)
