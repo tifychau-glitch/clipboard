@@ -162,20 +162,11 @@ export async function createApp(
   app.use(httpLogger);
   // Hostname guard is hard-disabled for hosted deploys. The platform's
   // edge (Railway, etc.) already terminates TLS on a fixed hostname, so
-  // the in-process allowlist just double-blocks legitimate traffic.
-  // shouldEnablePrivateHostnameGuard is still exported for tests.
-  const privateHostnameGateEnabled = false;
-  const privateHostnameAllowSet = resolvePrivateHostnameAllowSet({
-    allowedHostnames: opts.allowedHostnames,
-    bindHost: opts.bindHost,
-  });
-  app.use(
-    privateHostnameGuard({
-      enabled: privateHostnameGateEnabled,
-      allowedHostnames: opts.allowedHostnames,
-      bindHost: opts.bindHost,
-    }),
-  );
+  // the in-process allowlist just double-blocks legitimate traffic. The
+  // guard factory, shouldEnablePrivateHostnameGuard, and the allowlist
+  // resolver all remain exported for their unit tests.
+  // No app.use() — we don't mount the guard at all, so there is zero
+  // chance of a stray env var or config drift silently re-enabling it.
   app.use(
     actorMiddleware(db, {
       deploymentMode: opts.deploymentMode,
@@ -375,7 +366,8 @@ export async function createApp(
           port: hmrPort,
           clientPort: hmrPort,
         },
-        allowedHosts: privateHostnameGateEnabled ? Array.from(privateHostnameAllowSet) : undefined,
+        // Hostname guard is hard-disabled — leave Vite's host check off too.
+        allowedHosts: undefined,
       },
     });
     viteHtmlRenderer = createCachedViteHtmlRenderer({

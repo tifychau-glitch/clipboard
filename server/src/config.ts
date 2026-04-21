@@ -202,7 +202,24 @@ export function loadConfig(): Config {
     process.env.BETTER_AUTH_BASE_URL ??
     publicUrlFromEnv ??
     fileConfig?.auth?.publicBaseUrl;
-  const authPublicBaseUrl = authPublicBaseUrlRaw?.trim() || undefined;
+  // Normalize: a bare host like "my-app.railway.app" is NOT a valid URL and
+  // causes Better Auth to throw during init, which crashes the server before
+  // it can respond to /api/health. If the operator forgot the scheme, assume
+  // https:// (the only sane default for hosted deploys). Still validate the
+  // result with new URL() so obviously-broken inputs resolve to undefined
+  // rather than booting a dead server.
+  const authPublicBaseUrlTrimmed = authPublicBaseUrlRaw?.trim();
+  let authPublicBaseUrl: string | undefined;
+  if (authPublicBaseUrlTrimmed) {
+    const candidate = /^https?:\/\//i.test(authPublicBaseUrlTrimmed)
+      ? authPublicBaseUrlTrimmed
+      : `https://${authPublicBaseUrlTrimmed}`;
+    try {
+      authPublicBaseUrl = new URL(candidate).toString().replace(/\/$/, "");
+    } catch {
+      authPublicBaseUrl = undefined;
+    }
+  }
   const authBaseUrlMode: AuthBaseUrlMode =
     authBaseUrlModeFromEnv ??
     fileConfig?.auth?.baseUrlMode ??
