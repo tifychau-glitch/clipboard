@@ -51,6 +51,16 @@ export const api = {
   createCompany: (body: { name: string; description?: string }) =>
     request<Company>("/companies", { method: "POST", body: JSON.stringify(body) }),
 
+  // First-signup bootstrap. Safe to call on every sign-in — the server
+  // responds 200/409 idempotently. See server/src/routes/bootstrap.ts.
+  claimInstanceAdmin: () =>
+    request<{
+      promoted: boolean;
+      alreadyAdmin?: boolean;
+      firstClaim?: boolean;
+      reason?: string;
+    }>("/bootstrap/claim-instance-admin", { method: "POST", body: "{}" }),
+
   // Agents
   listAgents: (companyId: string) =>
     request<Agent[]>(`/companies/${companyId}/agents`),

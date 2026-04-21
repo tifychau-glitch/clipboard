@@ -78,6 +78,16 @@ export function useDefaultCompany() {
         if (!activeId) writeStored(companies[0].id);
         return companies[0];
       }
+      // Empty result in authenticated mode usually means the caller is a
+      // fresh user with no company yet. Before creating one, make sure
+      // they have instance_admin — the create endpoint requires it.
+      // The bootstrap call is idempotent: it promotes the first user on
+      // a clean instance, no-ops for everyone else.
+      try {
+        await api.claimInstanceAdmin();
+      } catch {
+        // Silent fallthrough — createCompany will surface any real error.
+      }
       const created = await api.createCompany({ name: DEFAULT_COMPANY_NAME });
       qc.invalidateQueries({ queryKey: ["companies"] });
       writeStored(created.id);
