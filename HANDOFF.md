@@ -25,6 +25,13 @@ Paperclip UI running unmodified on port 3101 — kept for reference.
 | Paperclip Copy (original UI) | `~/Downloads/paperclip-copy/` | 3101 | `paperclip-copy` |
 | AIOS (Iris accountability system) | `~/Downloads/AIOS/` | — | n/a |
 
+**Git remote**: `origin` → `https://github.com/tifychau-glitch/paperclip.git` (master branch).
+`upstream` → `https://github.com/paperclipai/paperclip` (for cherry-picking backend fixes; see "Deferred upstream changes").
+
+**Cloud deploy**: Railway project `caring-youth` / service `zucchini-enchantment`,
+Postgres attached, URL `https://zucchini-enchantment-production-5144.up.railway.app`.
+See `DEPLOY.md` for env-var setup.
+
 ### How to start Clipboard
 
 ```bash
@@ -46,19 +53,33 @@ cd ~/Downloads/paperclip-copy && PORT=3101 PAPERCLIP_INSTANCE_ID=paperclip-copy 
 ## Architecture
 
 ```
-Browser (localhost:5173 or :5180)
+Browser (localhost:5173 / :5180 — or Railway URL for cloud)
   └─ React + Vite + Tailwind (our custom UI)
-       └─ fetch /api/* → proxied to localhost:3100
+       ├─ Better Auth session gate (Login → get-session → app)
+       └─ fetch /api/* → proxied to localhost:3100 (dev) or same origin (prod)
             └─ Paperclip Node server (lightly extended)
-                 ├─ Embedded PostgreSQL (~/.paperclip/instances/default/)
+                 ├─ Embedded Postgres (~/.paperclip/instances/default/) in local dev
+                 │  or external Postgres via DATABASE_URL in Railway
                  ├─ Heartbeat scheduler
                  ├─ claude_local adapter → claude CLI → Claude subscription or API key
-                 └─ Clipboard-only additions (see "Backend extensions" below)
+                 ├─ Better Auth (email/password + Google OAuth + reset-password via Resend)
+                 └─ Clipboard-only additions:
+                      ├─ /api/health raw handler (platform healthcheck)
+                      ├─ /api/bootstrap/claim-instance-admin (first-signup promotion)
+                      ├─ /api/agents/:id/memory routes (memory system)
+                      ├─ /api/daemon/{register,poll,run-update,enqueue,tasks}
+                      └─ see "Backend Extensions" below
+
+Clipboard daemon (separate Node process, daemon/ directory in this repo)
+  ├─ Detects locally-installed AI CLIs (claude / codex / gemini / opencode)
+  └─ Polls POST /api/daemon/register then GET /api/daemon/poll every 5s
+       └─ Executes claimed tasks, streams output via POST /api/daemon/run-update
 ```
 
 The UI calls Paperclip's existing REST API — we just show less and lay it out
-differently. The DB schema and adapter layer are untouched. The only backend
-code we've added lives inside clearly commented blocks.
+differently. The DB schema and adapter layer from the upstream are untouched;
+Clipboard-added tables (`daemon_devices`, `daemon_tasks`) live in separate
+files and migrations. See DEPLOY.md for the full Railway setup.
 
 ---
 
@@ -70,6 +91,12 @@ ui/src/
   App.tsx                     Layout, 7-tab nav + CompanySwitcher, routes
   lib/
     api.ts                    All fetch wrappers for Paperclip REST API
+                              Includes claimInstanceAdmin() for first-signup bootstrap
+    auth.ts                   Better Auth hooks + helpers:
+                              - useSession / useSignIn / useSignUp / useSignOut
+                              - useForgotPassword / useResetPassword
+                              - useAuthCapabilities (queries /api/auth/capabilities)
+                              - startSocialSignIn("google") kicks off OAuth redirect
     types.ts                  TypeScript types + helpers:
                               - runTokens/runBilling/runModel/runSummary/runWakeReason
                               - isMeteredAgent(agent)  — API-key vs subscription
@@ -77,6 +104,8 @@ ui/src/
     format.ts                 formatTokens, formatUsd, formatDuration, formatRelativeTime
     company.ts                useDefaultCompany(), useCompanies(), useActiveCompanyId(),
                               setActiveCompanyId() — persists selected company to localStorage
+                              useDefaultCompany auto-calls claimInstanceAdmin()
+                              when listCompanies returns empty
     templates.ts              10 built-in agent role templates (CEO template is the
                               long 4-step delegation playbook; others are concise)
     delegation.ts             syncDelegationContext() — auto-injects delegation context
@@ -84,6 +113,11 @@ ui/src/
                               Uses VITE_CLIPBOARD_ROOT env var (or hardcoded default)
                               to resolve the delegate.py path portably.
   pages/
+    Login.tsx                 Sign-in / sign-up / forgot-password form with
+                              conditional Google OAuth button. Rendered pre-session.
+    ResetPassword.tsx         /reset-password?token=… landing page reached via
+                              the Resend email link. Routed before the auth gate
+                              in App.tsx so the token isn't dropped.
     Dashboard.tsx             Unified high-level overview of the business
     Agents.tsx                Agent grid, Add Agent button, pause/delete/approve,
                               budget indicator, CEO badge, skeleton loading
@@ -325,6 +359,31 @@ All additive — no core Paperclip logic modified. Each block is clearly comment
 ### `server/src/routes/company-skills.ts`
 - **`PATCH /companies/:companyId/skills/:skillId`** — rename a skill (update `name` and/or `slug`). Validates slug regex `/^[a-z0-9-]+$/`, checks for 409 slug conflicts in the same company, re-derives the canonical `key` by swapping the trailing path segment (since all key formats end in `/slug`), logs a `company.skill_renamed` activity entry.
 
+### `server/src/routes/bootstrap.ts` (Railway deploy)
+- **`POST /api/bootstrap/claim-instance-admin`** — promotes the first authenticated user to `instance_admin` when no admin row exists yet. Idempotent, race-safe (unique index on `(userId, role)`), 409 once claimed. Called automatically by `useDefaultCompany` in the UI when `/api/companies` returns empty. Replaces Paperclip's local "board-claim" token URL flow, which was impractical on cloud hosts. Gated by optional `PAPERCLIP_DISABLE_BOOTSTRAP_CLAIM=true`.
+
+### `server/src/routes/daemon.ts` (cloud daemon endpoints)
+- **`POST /api/daemon/register`** — upsert a device by `deviceKey` in the new `daemon_devices` table. Anyone can register; the key itself is the credential.
+- **`GET /api/daemon/poll?deviceKey=…`** — transactional `FOR UPDATE SKIP LOCKED` claim of up to 5 pending `daemon_tasks` rows, flips to `in_flight`, returns task envelope. Bumps device liveness.
+- **`POST /api/daemon/run-update`** — appends stdout/stderr chunks, flips terminal status + exitCode on `done=true`. Validates `deviceKey` ownership when supplied.
+- **`POST /api/daemon/enqueue`** — instance-admin-only operator API. Creates a `daemon_tasks` row targeting a specific registered device. Validates `adapterType` is in the device's advertised `availableClis`.
+- **`GET /api/daemon/tasks`** — admin introspection; recent tasks filtered optionally by deviceKey.
+
+### `server/src/auth/better-auth.ts` (auth config)
+- `databaseHooks.user.create.before` — blocks off-list sign-ups (both email/password and Google OAuth) when `INVITE_ALLOWLIST` is set.
+- `emailAndPassword.sendResetPassword` — sends the reset email via Resend (see `server/src/auth/email.ts`). Logs the URL server-side and throws `EmailNotConfiguredError` when `RESEND_API_KEY` / `EMAIL_FROM` are unset.
+- `socialProviders.google` — wired conditionally when both `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` are set. Boot log prints `expectedCallback` for redirect-URI verification.
+
+### `server/src/routes/auth.ts`
+- **`GET /api/auth/capabilities`** — unauthenticated capability probe; returns `{ passwordReset, googleOAuth }` so the Login UI renders only features that are actually wired.
+
+### `server/src/middleware/invite-only.ts`
+- Re-mounted on the `/api` Router as a second layer behind the Better Auth hook. Any interactive session (`actor.type==="board"` && `source==="session"`) whose email is off-list gets a 403 HTML page with `CLIPBOARD_CONTACT_EMAIL`. Agent JWTs + board API keys pass through.
+
+### `server/src/app.ts` (deployment adjustments)
+- **Raw `/api/health` and `/health` handlers** registered BEFORE all middleware so Railway's platform healthcheck always passes regardless of auth/hostname/deployment mode.
+- **`privateHostnameGuard` hard-disabled** — not mounted at all. The platform's edge handles hostname validation.
+
 ---
 
 ## Skills Library Cleanup
@@ -438,12 +497,50 @@ POST   /approvals/:id/reject                         reject a pending hire
 
 ---
 
+## Cloud Deployment (Railway)
+
+Clipboard runs on Railway with `PAPERCLIP_DEPLOYMENT_MODE=authenticated`
+and external Postgres via `DATABASE_URL`. The full env-var checklist
+lives in `DEPLOY.md`; the highlights worth knowing here:
+
+- **`railway.toml`** at repo root — `dockerfile` builder, `/api/health`
+  healthcheck, `PAPERCLIP_DEPLOYMENT_EXPOSURE=public` for production.
+- **Dockerfile** — `VOLUME` directive removed (Railway rejects it); port
+  is `$PORT`-aware via `config.ts`.
+- **`privateHostnameGuard` is hard-disabled** in `app.ts`. The platform's
+  edge handles hostname validation; the in-process allowlist just kept
+  blocking legitimate Railway probe traffic.
+- **Raw `/api/health` handler** is registered BEFORE all middleware so
+  platform healthchecks succeed independent of auth/mode.
+- **First-user bootstrap**: new sign-ups land with no role; the UI's
+  `useDefaultCompany` auto-calls `POST /api/bootstrap/claim-instance-admin`
+  which promotes the caller to `instance_admin` iff no admin exists.
+  Idempotent, race-safe.
+- **Auth stack**: Better Auth with email/password + optional Google OAuth.
+  Password reset via Resend (HTML email, token-based reset link, 1-hour
+  expiry). `BETTER_AUTH_URL` must be set to the public Railway URL
+  (code auto-prepends `https://` if missing scheme, but set it explicitly).
+- **Invite allowlist** (`INVITE_ALLOWLIST`, comma-separated emails) is
+  enforced at two layers: the Better Auth `databaseHooks.user.create.before`
+  rejects off-list sign-ups entirely, and `inviteOnlyMiddleware` on the
+  `/api` Router blocks off-list sessions at API-call time.
+
 ## Known Issues / Future Work
 
-1. **Event triggers** (`mention`, `comment`, `status_change`, `dependency_resolved`) require a backend dispatcher if we ever want them to actually work. Currently the UI doesn't pretend to support them.
-2. **Subscription budget caps** don't enforce. If a real cap is needed for subscription-covered runs, the backend would need to track imputed spend (the `api-equivalent` cost Paperclip already computes) or we'd need to implement a token-count cap instead of a dollar cap.
-3. **CEO/CTO/CMO** (created via old Paperclip hire flow) use Paperclip's managed instructions bundle instead of Clipboard's custom `promptTemplate`. The `delegationContext` sync still writes to their `metadata`, but to render it in the prompt they need their `promptTemplate` updated via an Edit on their detail page. Any agent created via Clipboard's Add Agent dialog is already wired correctly.
-4. **`VITE_CLIPBOARD_ROOT`** — for portability to other machines, set this in `ui/.env.local` to the absolute path of the Clipboard repo. Falls back to `/Users/tiffanychau/Downloads/paperclip-claude` if not set.
+1. **Heartbeat → daemon auto-routing is not wired yet.** The three daemon
+   endpoints (`/register`, `/poll`, `/run-update`, plus `/enqueue`) are
+   live, but the scheduler in `server/src/services/heartbeat.ts` still
+   spawns local adapter processes for every agent. Making a daemon-bound
+   agent enqueue into `daemon_tasks` instead of spawning locally requires
+   a surgical edit around `adapter.execute` at ~line 4617, plus a new
+   nullable `agents.daemon_device_key` column, plus attaching daemon
+   output to `heartbeat_runs` so the UI's Recent Tasks section shows
+   daemon runs the same as local ones. Explicit follow-up session
+   worth scoping on its own.
+2. **Event triggers** (`mention`, `comment`, `status_change`, `dependency_resolved`) require a backend dispatcher if we ever want them to actually work. Currently the UI doesn't pretend to support them.
+3. **Subscription budget caps** don't enforce. If a real cap is needed for subscription-covered runs, the backend would need to track imputed spend (the `api-equivalent` cost Paperclip already computes) or we'd need to implement a token-count cap instead of a dollar cap.
+4. **CEO/CTO/CMO** (created via old Paperclip hire flow) use Paperclip's managed instructions bundle instead of Clipboard's custom `promptTemplate`. The `delegationContext` sync still writes to their `metadata`, but to render it in the prompt they need their `promptTemplate` updated via an Edit on their detail page. Any agent created via Clipboard's Add Agent dialog is already wired correctly.
+5. **`VITE_CLIPBOARD_ROOT`** — for portability to other machines, set this in `ui/.env.local` to the absolute path of the Clipboard repo. Falls back to `/Users/tiffanychau/Downloads/paperclip-claude` if not set.
 
 ---
 
@@ -453,20 +550,30 @@ POST   /approvals/:id/reject                         reject a pending hire
 
 **#4114 plugin database namespaces (migration 0059)** — Deliberately skipped. Adds database schema for plugin namespacing. Not applicable while plugin system is stripped.
 
-**Note**: migration slot `0059` has since been reclaimed by our own `0059_slim_iron_monger` (daemon_devices table). If the plugin system is ever restored, upstream `#4114` cannot be cherry-picked verbatim — regenerate its schema with `drizzle-kit generate` so it lands at a fresh migration number instead.
+**Note**: migration slots `0059` (daemon_devices) and `0060` (daemon_tasks) are now ours. If the plugin system is ever restored, upstream `#4114` cannot be cherry-picked verbatim — regenerate its schema with `drizzle-kit generate` so it lands at a fresh migration number instead.
 
 ---
 
 ## Files to Read for Deeper Context
 
+- `DEPLOY.md` — full Railway env-var checklist + redirect-URI verification notes
 - `ui/src/lib/types.ts` — all types + helpers (`isMeteredAgent`, `isCeoAgent`, `findCeoAgent`, run accessors)
+- `ui/src/lib/auth.ts` — Better Auth hooks and capability probe
 - `ui/src/lib/delegation.ts` — delegation context generator + portable path resolution
 - `ui/src/lib/templates.ts` — CEO template's 4-step delegation playbook
 - `ui/src/components/StatusBadge.tsx` — status-pill mapping for agents + runs
 - `ui/src/pages/AgentDetail.tsx` — most of the per-agent feature surface
+- `ui/src/pages/Login.tsx` + `ResetPassword.tsx` — auth flow
 - `scripts/memory-writer.py` — full memory summariser with inline docs
 - `scripts/delegate.py` — delegation script with guardrails
 - `server/src/routes/company-skills.ts` — includes new `PATCH /skills/:id` route
-- `server/src/services/heartbeat.ts` — memory-writer hook at ~line 4115
+- `server/src/routes/bootstrap.ts` — first-signup instance_admin promotion
+- `server/src/routes/daemon.ts` — daemon register / poll / run-update / enqueue
+- `server/src/auth/better-auth.ts` — Better Auth config + invite hook + redirect audit
+- `server/src/auth/email.ts` — Resend wrapper + reset-email HTML
+- `server/src/services/heartbeat.ts` — memory-writer hook at ~line 4115;
+   daemon auto-routing fork goes near `adapter.execute` at ~line 4617 (future)
 - `server/src/routes/agents.ts` — memory read/clear routes near the company-agents list route
+- `packages/db/src/schema/daemon_devices.ts` + `daemon_tasks.ts` — cloud daemon tables
+- `daemon/src/*` — standalone daemon process that pairs with the server
 - `skills/clipboard-*/SKILL.md` — each has the new `slug: + name:` frontmatter pattern
