@@ -451,7 +451,9 @@ POST   /approvals/:id/reject                         reject a pending hire
 
 **#4122 plugins.ts authz hardening** — The authorization hardening from commit 7a329fb8 was applied to all routes except server/src/routes/plugins.ts, which was kept at our stripped version. If the plugin system is ever re-enabled in a future version of Clipboard, revisit upstream commit 7a329fb8 to apply the missing authz changes to that route before shipping.
 
-**#4114 plugin database namespaces (migration 0059)** — Deliberately skipped. Adds database schema for plugin namespacing. Not applicable while plugin system is stripped. Do not apply this migration unless plugin system is restored.
+**#4114 plugin database namespaces (migration 0059)** — Deliberately skipped. Adds database schema for plugin namespacing. Not applicable while plugin system is stripped.
+
+**Note**: migration slot `0059` has since been reclaimed by our own `0059_slim_iron_monger` (daemon_devices table). If the plugin system is ever restored, upstream `#4114` cannot be cherry-picked verbatim — regenerate its schema with `drizzle-kit generate` so it lands at a fresh migration number instead.
 
 ---
 
