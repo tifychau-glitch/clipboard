@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Neutrals</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .wrap{width:700px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .sw{border-radius:var(--radius-lg);padding:16px 16px 14px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;}
+  .name{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:-0.01em;}
+  .hex{font-family:var(--font-mono);font-size:9px;margin-top:3px;letter-spacing:0.1em;}
+</style>
+</head>
+<body class="cb">
+<div class="wrap">
+  <div class="sw" style="background:#FFFFFF;border:1px solid var(--cb-border);color:#12192B;">
+    <div class="name">White</div><div class="hex" style="color:var(--cb-muted)">#FFFFFF</div>
+  </div>
+  <div class="sw" style="background:#F5F6FA;border:1px solid var(--cb-border);color:#12192B;">
+    <div class="name">Surface</div><div class="hex" style="color:var(--cb-muted)">#F5F6FA</div>
+  </div>
+  <div class="sw" style="background:#E8EAF0;color:#12192B;">
+    <div class="name">Border</div><div class="hex" style="color:#6b7088">#E8EAF0</div>
+  </div>
+  <div class="sw" style="background:#8B90A7;color:#fff;">
+    <div class="name">Muted</div><div class="hex" style="color:rgba(255,255,255,0.55)">#8B90A7</div>
+  </div>
+  <div class="sw" style="background:#1E2435;color:#fff;">
+    <div class="name">Ink</div><div class="hex" style="color:rgba(255,255,255,0.45)">#1E2435</div>
+  </div>
+</div>
+</body>
+</html>

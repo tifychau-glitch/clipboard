@@ -37,15 +37,8 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your profile, API keys, and how Clipboard talks to the rest of your stack.
-        </p>
-      </div>
-
       <div className="flex flex-col gap-6 md:flex-row">
-        <nav className="flex shrink-0 flex-row gap-1 overflow-x-auto md:flex-col md:gap-0.5 md:w-48">
+        <nav className="flex shrink-0 flex-row gap-1 overflow-x-auto md:flex-col md:gap-0.5 md:w-52">
           {TABS.map(({ id, label, icon: Icon }) => {
             const active = tab === id;
             return (
@@ -53,13 +46,28 @@ export function SettingsPage() {
                 key={id}
                 type="button"
                 onClick={() => setTab(id)}
-                className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
-                  active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                }`}
+                className="inline-flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 transition-all"
+                style={{
+                  background: active ? "var(--card)" : "transparent",
+                  color: active ? "var(--foreground)" : "var(--muted-foreground)",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: active ? 700 : 500,
+                  fontSize: 13,
+                  letterSpacing: "-0.01em",
+                  boxShadow: active ? "0 1px 3px rgba(18,25,43,0.08)" : "none",
+                  border: active ? "1px solid var(--border)" : "1px solid transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) e.currentTarget.style.color = "var(--foreground)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.color = "var(--muted-foreground)";
+                }}
               >
-                <Icon className="size-4" />
+                <Icon
+                  className="size-4"
+                  style={{ color: active ? "#7B52E8" : "currentColor" }}
+                />
                 {label}
               </button>
             );
@@ -878,8 +886,24 @@ function ComingSoon({ title, blurb }: { title: string; blurb: string }) {
 
 // ─── Shared bits ──────────────────────────────────────────────────────────
 
+/**
+ * Local section card used by Settings tabs. Kept as a tiny wrapper around
+ * the brand Card primitive so upgrading tokens here cascades without
+ * touching every tab.
+ */
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-md border border-border bg-card p-4">{children}</div>;
+  return (
+    <div
+      className="rounded-xl px-5 py-5"
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        boxShadow: "0 1px 6px rgba(18,25,43,0.06)",
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
 function Field({
@@ -893,25 +917,79 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-1 text-xs font-medium text-muted-foreground">{label}</div>
+      <div
+        className="mb-1.5"
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 600,
+          fontSize: 13,
+          letterSpacing: "-0.01em",
+          color: "var(--foreground)",
+        }}
+      >
+        {label}
+      </div>
       {children}
-      {hint && <div className="mt-1 text-xs text-muted-foreground/70">{hint}</div>}
+      {hint && (
+        <div
+          className="mt-1.5"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 12,
+            color: "var(--muted-foreground)",
+            lineHeight: 1.5,
+          }}
+        >
+          {hint}
+        </div>
+      )}
     </label>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border bg-background p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-semibold">{value}</div>
+    <div
+      className="rounded-[10px] px-3.5 py-3"
+      style={{ background: "var(--background)", border: "1px solid var(--border)" }}
+    >
+      <div
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--muted-foreground)",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        className="mt-1"
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 800,
+          fontSize: 20,
+          letterSpacing: "-0.025em",
+          color: "var(--foreground)",
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 }
 
 function Loading() {
   return (
-    <div className="flex items-center gap-2 text-muted-foreground">
+    <div
+      className="flex items-center gap-2"
+      style={{
+        fontFamily: "var(--font-sans)",
+        fontSize: 13,
+        color: "var(--muted-foreground)",
+      }}
+    >
       <Loader2 className="size-4 animate-spin" /> Loading…
     </div>
   );
@@ -920,9 +998,14 @@ function Loading() {
 function ErrorBanner({ message, className }: { message: string; className?: string }) {
   return (
     <div
-      className={`flex items-start gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300 ${
-        className ?? ""
-      }`}
+      className={`flex items-start gap-2 rounded-xl px-3.5 py-2.5 ${className ?? ""}`}
+      style={{
+        background: "#FEE2E2",
+        border: "1px solid #FCA5A5",
+        color: "#991B1B",
+        fontFamily: "var(--font-sans)",
+        fontSize: 13,
+      }}
     >
       <AlertCircle className="size-4 shrink-0 mt-0.5" />
       <span className="break-words">{message}</span>

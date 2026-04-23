@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Agent Card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .card{width:700px;background:#fff;border:1px solid var(--cb-border);border-radius:var(--radius-xl);padding:24px 28px;}
+  .inner{background:var(--cb-bg);border:1px solid var(--cb-border);border-radius:12px;padding:20px 22px;}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .ag{display:flex;align-items:center;gap:12px;}
+  .avatar{width:40px;height:40px;border-radius:10px;background:#12192B;display:flex;align-items:center;justify-content:center;}
+  .name{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--cb-navy);letter-spacing:-0.01em;}
+  .sub{font-family:var(--font-sans);font-size:12px;color:var(--cb-muted);margin-top:2px;}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-family:var(--font-sans);font-size:11px;font-weight:500;background:#E6FAF8;color:#1A8A7D;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#2BBFAD;}
+  .segs{display:flex;gap:3px;margin:12px 0 14px;}
+  .seg{height:4px;border-radius:2px;}
+  .stats{display:flex;gap:8px;}
+  .stat{flex:1;background:#fff;border-radius:8px;padding:10px 12px;border:1px solid var(--cb-border);text-align:center;}
+  .val{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:-0.02em;}
+  .lbl{font-family:var(--font-mono);font-size:9px;color:var(--cb-muted);letter-spacing:0.08em;margin-top:2px;}
+</style>
+</head>
+<body class="cb">
+<div class="card">
+  <div class="inner">
+    <div class="head">
+      <div class="ag">
+        <div class="avatar">
+          <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+            <rect x="6" y="10" width="36" height="33" rx="5" fill="rgba(255,255,255,0.08)"/>
+            <path d="M14 10 H24" stroke="#F6C94E" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M24 10 H34" stroke="#2BBFAD" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M6 14 V43" stroke="#F6C94E" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M42 14 V43" stroke="#2BBFAD" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M6 43 H42" stroke="#7B52E8" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M16 27 L21.5 33 L32 20" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="name">Lead Nurture Agent</div>
+          <div class="sub">TC Firm · Creative Finance</div>
+        </div>
+      </div>
+      <span class="pill"><span class="dot"></span>Live</span>
+    </div>
+    <div class="segs">
+      <div class="seg" style="flex:3;background:#7B52E8"></div>
+      <div class="seg" style="flex:2;background:#2BBFAD"></div>
+      <div class="seg" style="flex:1;background:#F6C94E"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="val" style="color:#7B52E8">14</div><div class="lbl">TASKS</div></div>
+      <div class="stat"><div class="val" style="color:#2BBFAD">98%</div><div class="lbl">RATE</div></div>
+      <div class="stat"><div class="val" style="color:#F6C94E">2m</div><div class="lbl">LAST RUN</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

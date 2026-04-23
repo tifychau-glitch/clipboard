@@ -1,0 +1,165 @@
+/* =========================================================================
+   Clipboard — Colors & Type
+   The brand tokens that everything else in the system builds on.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Brand colors (from the logo mark) ────────────────────────────── */
+  --cb-navy:     #12192B;  /* primary — dominant surface */
+  --cb-ink:      #1E2435;  /* slightly-lifted body text on light bg */
+  --cb-yellow:   #F6C94E;  /* CTAs, contracts, energy */
+  --cb-violet:   #7B52E8;  /* agents, automation, product */
+  --cb-teal:     #2BBFAD;  /* live, active, success */
+
+  /* ── Neutrals ─────────────────────────────────────────────────────── */
+  --cb-white:    #FFFFFF;
+  --cb-bg:       #F5F6FA;  /* app surface, page background */
+  --cb-surface:  #FFFFFF;  /* cards, panels */
+  --cb-border:   #E8EAF0;
+  --cb-border-strong: #D4D8E3;
+  --cb-muted:    #8B90A7;  /* supporting text, inactive */
+  --cb-muted-2:  #4A5068;  /* secondary body */
+
+  /* ── Accent tints (use for soft pill backgrounds, never as surfaces) */
+  --cb-yellow-tint: #FEF9E7;
+  --cb-yellow-ink:  #B8860B;
+  --cb-violet-tint: #F0EBFF;
+  --cb-violet-ink:  #5B32C8;
+  --cb-teal-tint:   #E6FAF8;
+  --cb-teal-ink:    #1A8A7D;
+
+  /* ── Semantic foreground ──────────────────────────────────────────── */
+  --fg-1: var(--cb-navy);          /* headlines, primary text on light */
+  --fg-2: var(--cb-muted-2);       /* body */
+  --fg-3: var(--cb-muted);         /* metadata, supporting */
+  --fg-on-navy-1: #FFFFFF;         /* primary text on navy */
+  --fg-on-navy-2: rgba(255,255,255,0.5);
+  --fg-on-navy-3: rgba(255,255,255,0.3);
+
+  /* ── Typography: families ─────────────────────────────────────────── */
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'DM Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* ── Typography: tracking ─────────────────────────────────────────── */
+  --track-display: -0.035em;  /* H1 / hero */
+  --track-h2:      -0.025em;
+  --track-h3:      -0.02em;
+  --track-ui:      -0.01em;   /* buttons, nav, labels */
+  --track-mono:    0.15em;    /* uppercase labels */
+
+  /* ── Shape & elevation ────────────────────────────────────────────── */
+  --radius-sm:  8px;
+  --radius-md:  10px;  /* buttons, inputs */
+  --radius-lg:  12px;  /* small cards, swatches */
+  --radius-xl:  16px;  /* primary card radius */
+  --radius-2xl: 20px;  /* marketing surfaces only */
+  --radius-pill: 999px;
+
+  --shadow-xs: 0 1px 2px rgba(18,25,43,0.05);
+  --shadow-sm: 0 1px 6px rgba(18,25,43,0.08);
+  --shadow-md: 0 4px 14px rgba(18,25,43,0.08);
+  --shadow-lg: 0 12px 28px rgba(18,25,43,0.14);
+  --shadow-focus: 0 0 0 3px rgba(123,82,232,0.25);
+
+  /* ── Spacing scale (4px base) ─────────────────────────────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ── Motion ───────────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-1: 0.15s;
+  --dur-2: 0.25s;
+  --dur-3: 0.4s;
+}
+
+/* =========================================================================
+   Semantic base styles — use these as presets; override inline when needed.
+   ========================================================================= */
+
+body.cb {
+  background: var(--cb-bg);
+  color: var(--fg-2);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.cb-h1, h1.cb {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 5vw, 64px);
+  line-height: 1.02;
+  letter-spacing: var(--track-display);
+  color: var(--fg-1);
+}
+
+.cb-h2, h2.cb {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.1;
+  letter-spacing: var(--track-h2);
+  color: var(--fg-1);
+}
+
+.cb-h3, h3.cb {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: var(--track-h3);
+  color: var(--fg-1);
+}
+
+.cb-body-lg {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--fg-2);
+}
+
+.cb-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--fg-2);
+}
+
+.cb-body-sm {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.cb-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.cb-code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-1);
+}

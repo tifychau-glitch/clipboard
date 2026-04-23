@@ -1,15 +1,4 @@
-import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
-import {
-  Activity,
-  Banknote,
-  BookOpen,
-  Clipboard,
-  LayoutDashboard,
-  LogOut,
-  Network,
-  Settings,
-  Zap,
-} from "lucide-react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardPage } from "./pages/Dashboard";
 import { AgentsPage } from "./pages/Agents";
 import { AgentDetailPage } from "./pages/AgentDetail";
@@ -21,19 +10,8 @@ import { OrgChartPage } from "./pages/OrgChart";
 import { LoginPage } from "./pages/Login";
 import { ResetPasswordPage } from "./pages/ResetPassword";
 import { SettingsPage } from "./pages/Settings";
-import { CompanySwitcher } from "./components/CompanySwitcher";
-import { useSession, useSignOut } from "./lib/auth";
-
-const TABS = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/agents", label: "Agents", icon: Clipboard },
-  { to: "/org", label: "Org", icon: Network },
-  { to: "/tasks", label: "Tasks", icon: Zap },
-  { to: "/skills", label: "Skills", icon: BookOpen },
-  { to: "/activity", label: "Activity", icon: Activity },
-  { to: "/spending", label: "Spending", icon: Banknote },
-  { to: "/settings", label: "Settings", icon: Settings },
-];
+import { AppSidebar } from "./components/AppSidebar";
+import { useSession } from "./lib/auth";
 
 export function App() {
   // Pre-session routes: the reset-password flow lands here via a link
@@ -69,62 +47,10 @@ function AuthenticatedApp({
 }: {
   user: { email: string | null; name: string | null };
 }) {
-  const signOut = useSignOut();
-  const label = user.name?.trim() || user.email || "Signed in";
-
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-6 px-6 py-4">
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-2 font-semibold hover:opacity-80"
-          >
-            <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Clipboard className="size-4" />
-            </span>
-            <span>Clipboard</span>
-          </Link>
-          <CompanySwitcher />
-          <nav className="flex items-center gap-1">
-            {TABS.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`
-                }
-              >
-                <Icon className="size-4" />
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-3">
-            <span
-              className="text-xs text-muted-foreground max-w-[220px] truncate"
-              title={label}
-            >
-              {label}
-            </span>
-            <button
-              type="button"
-              onClick={() => signOut.mutate()}
-              disabled={signOut.isPending}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 disabled:opacity-50"
-              title="Sign out"
-            >
-              <LogOut className="size-3.5" />
-              Sign out
-            </button>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">
+    <div className="flex h-dvh bg-background text-foreground">
+      <AppSidebar user={user} />
+      <main className="flex-1 overflow-auto px-7 py-6 min-w-0">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />

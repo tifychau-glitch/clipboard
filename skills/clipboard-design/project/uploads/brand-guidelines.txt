@@ -1,0 +1,249 @@
+BRAND GUIDELINES
+clipboard
+Your business, handled.
+Pre-built AI agent teams for business operators. Simple, visual, and built for people who want results — not a PhD in AI.
+Simple
+No config. No engineers.
+Modern
+Built for business in 2025.
+Reliable
+Shows up every day.
+01 — BRAND OVERVIEW
+Who We Are
+Clipboard is a visual, no-code platform that lets business operators run AI agent teams — without needing to be technical. We take the power of AI orchestration and make it accessible to anyone who runs a real business.
+We are not a developer tool. We are not another chatbot. We are the business owner&apos;s unfair advantage — a full back office that runs itself.
+Brand Positioning
+Category: Business AI Automation
+Target Audience: Non-technical business owners and operators, especially in real estate
+Key Differentiator: Pre-built, niche-specific agent templates — visual, not code-based
+Tone: Direct, confident, approachable, modern
+What We Are vs. What We Are Not
+DO
+DON&apos;T
+A business tool
+A developer tool
+Simple and visual
+Technical or complex
+Built for operators
+Built for engineers
+Results-focused
+Feature-focused
+Modern and credible
+A Paperclip clone
+02 — LOGO SYSTEM
+The Logo
+The Clipboard logo consists of two elements: the icon mark and the wordmark. They should almost always appear together, with the icon mark to the left of the wordmark.
+Icon Mark
+The icon is a clipboard outline with three color-coded border segments — Yellow (left), Teal (right), and Violet (bottom) — with a navy checkmark inside. The three colors are intentional and represent the multi-functional nature of the platform.
+Yellow segment = Contracts, tasks, deliverables
+Violet segment = Agent intelligence, automation
+Teal segment = Active, running, success states
+Wordmark
+The wordmark is always set in lowercase: &quot;clipboard&quot; — never &quot;Clipboard&quot; or &quot;CLIPBOARD&quot;. Lowercase communicates approachability and modernity, which is core to our brand personality.
+Logo Variations
+Default (Light)
+Use on white or light backgrounds. Icon mark in color, wordmark in Navy.
+Dark Mode
+Use on dark/navy backgrounds. Icon mark in color, wordmark in White.
+Icon Only
+Use for app icons, favicons, profile images where space is limited.
+Logo Clear Space
+Always maintain clear space around the logo equal to the height of the lowercase &apos;c&apos; in the wordmark. Never crowd the logo with other elements.
+Logo Don&apos;ts
+DO
+DON&apos;T
+Always use the approved color versions
+Recolor the logo segments
+Maintain proportions — never stretch
+Add drop shadows or effects
+Use on approved backgrounds only
+Use the logo on busy backgrounds
+Keep icon mark and wordmark together
+Rearrange or separate the elements
+03 — COLOR SYSTEM
+Brand Colors
+The Clipboard color system is built around a dominant Navy anchor and three signature accent colors extracted directly from the logo mark. Each accent color has a defined purpose and should not be used interchangeably.
+Primary Colors
+Navy
+#12192B
+Primary background, sidebar, text — the dominant color
+Yellow
+#F6C94E
+CTAs, highlights, contracts/tasks — use for energy
+Violet
+#7B52E8
+Agents, product, automation — the intelligence color
+Teal
+#2BBFAD
+Active states, success, live indicators
+Secondary Colors
+White
+#FFFFFF
+Primary content background
+Surface
+#F5F6FA
+Secondary background, cards, panels
+Muted
+#8B90A7
+Supporting text, labels, inactive states
+Color Rules
+Navy always dominates. It should cover the largest surface area on any given screen or design.
+The three accents (Yellow, Violet, Teal) are supporting cast — never competing equals.
+Never use all three accent colors at full weight in the same component or section.
+The three-stripe motif (Yellow | Teal | Violet) is reserved for the logo and intentional brand moments — not for decoration.
+Yellow on Navy and Violet on White are your two highest-contrast pairings — use them for primary CTAs.
+Color Do&apos;s and Don&apos;ts
+DO
+DON&apos;T
+Navy as the dominant surface color
+Mix all three accents in one component
+One accent color per component
+Use yellow text on white (low contrast)
+Yellow for primary CTAs on dark backgrounds
+Use violet as a background color
+Teal for active/success indicators only
+Use accent colors at equal weight to navy
+04 — TYPOGRAPHY
+Type System
+Clipboard uses a two-font system: Bricolage Grotesque for all display and headline text, and DM Sans for all body copy and UI text. DM Mono is used exclusively for labels, data readouts, and status text.
+Display — Bricolage Grotesque
+Work less. Do more.
+Weights used: 800 (Display), 700 (H2), 600 (H3, UI labels)
+Use for: Page headlines, section titles, card headers, button text, navigation
+Letter spacing: -0.02em to -0.035em (tighter = more modern and confident)
+Google Fonts: Bricolage Grotesque
+Body — DM Sans
+Clipboard gives your business a team of AI agents that handle the back office — so you can focus on closing deals, not managing tasks.
+Weights used: 300 (descriptive body), 400 (standard body), 500 (emphasized body)
+Use for: Paragraph text, descriptions, supporting copy, UI prose
+Line height: 1.65–1.7 (generous spacing improves readability)
+Google Fonts: DM Sans
+Labels — DM Mono
+AGENT STATUS: ACTIVE  ·  TASKS: 14  ·  LAST RUN: 2M AGO
+Weights used: 400, 500
+Use for: Status labels, data readouts, timestamps, metadata, section labels
+Always: Uppercase, wide letter-spacing (0.10–0.18em)
+Never: Use for headlines or paragraph body copy
+Type Scale
+Level
+Size
+Font
+Use
+H1 / Display
+48–64px
+Bricolage 800
+Page hero headlines
+H2
+28–36px
+Bricolage 700
+Section headings
+H3
+18–22px
+Bricolage 600
+Card headers, subsections
+Body Large
+16–18px
+DM Sans 300
+Hero supporting copy
+Body
+14–15px
+DM Sans 400
+Standard paragraph copy
+Body Small
+12–13px
+DM Sans 400
+Captions, supporting notes
+Label
+10–11px
+DM Mono 500
+Status, metadata, section tags
+05 — DESIGN PRINCIPLES
+How We Design
+Clipboard&apos;s design language is modern, minimal, and business-first. Every decision should make the product feel easier to trust and faster to use.
+1. Navy Dominates
+Navy (#12192B) is the primary color of every major surface — hero sections, sidebars, footers. It establishes credibility and gives our three accent colors room to pop. When in doubt, go navy.
+2. One Accent Per Section
+Each section or component should lead with one accent color. Yellow for CTAs. Teal for live/active states. Violet for product and agent-related UI. Never stack all three at equal weight — it creates visual noise.
+3. The Checkmark Is a Brand Moment
+The checkmark inside our icon isn&apos;t just a logo detail — it&apos;s a brand promise. &quot;Done. Handled. Complete.&quot; Lean into checkmark language in UI microcopy: &quot;Contract sent&quot;, &quot;Follow-up complete&quot;, &quot;Task handled.&quot; It reinforces what the product does every time someone reads it.
+4. Rounded but Not Soft
+Use border-radius of 10–14px for cards and buttons. This range feels professional and modern without tipping into consumer/cute territory. Avoid 20px+ radii which read as childlike. Avoid 0px radii which read as aggressive.
+5. Breathe
+White space is not empty space — it&apos;s doing work. The contrast between dense Navy sections and light, open content panels is what gives the brand its polish. Resist the urge to fill every surface. Let the design breathe.
+6. Type Hierarchy Is Non-Negotiable
+Headlines should always feel much larger and heavier than body copy. The jump from H1 to body text should be dramatic. This creates clarity and makes pages easy to scan — which matters enormously for business users who are busy.
+Design Checklist
+DO
+DON&apos;T
+Navy as dominant surface
+All three accents at equal weight
+One accent color per component
+Yellow text on white (low contrast)
+10–14px border radius
+Over-rounded corners (20px+)
+Generous white space between sections
+Crowded layouts with no breathing room
+Lowercase &apos;clipboard&apos; wordmark
+Title case &apos;Clipboard&apos; wordmark
+DM Mono for all labels and metadata
+Using body fonts for status labels
+Checkmark language in UI microcopy
+Smiley faces, hearts, or cute illustrations
+06 — VOICE &amp; TONE
+How We Sound
+Clipboard speaks like a confident operator, not a tech startup trying to impress engineers. Our voice is direct, warm, and results-focused. We don&apos;t over-explain. We don&apos;t over-hype. We say what we do and we do what we say.
+Brand Voice Pillars
+Simple
+No fluff. Say what it does. Operators are busy — respect their time.
+Modern
+Sharp, current language. Not corporate jargon. Not Gen Z slang.
+Reliable
+Grounded, confident claims. We back up what we say.
+Yours
+Niche-specific. We speak your industry&apos;s language.
+Writing Examples
+WRITE THIS
+NOT THIS
+Your business, handled.
+Experience the future of AI-powered automation.
+Get started free
+Begin your journey today
+Agents that run your back office
+Leverage intelligent multi-agent orchestration
+No engineers needed
+No technical expertise required whatsoever
+14 tasks complete
+Successfully processed 14 workflow items
+07 — QUICK REFERENCE
+Brand at a Glance
+Brand Name
+clipboard (always lowercase)
+Tagline
+Your business, handled.
+Primary Font
+Bricolage Grotesque (Display / Headlines)
+Secondary Font
+DM Sans (Body Copy)
+Mono Font
+DM Mono (Labels / Status)
+Navy
+#12192B — Primary, dominant surface
+Yellow
+#F6C94E — CTAs, energy, contracts
+Violet
+#7B52E8 — Agents, product, automation
+Teal
+#2BBFAD — Active, success, live states
+Border Radius
+10–14px for cards and buttons
+Logo Rule
+Icon mark always appears with wordmark
+Color Rule
+One accent per component, Navy dominates
+Tone
+Direct · Confident · Approachable · Results-focused
+Not
+Techy · Jargon-heavy · Cute · Corporate
+clipboard
+Brand Guidelines v1.0
+Confidential — Internal Use Only

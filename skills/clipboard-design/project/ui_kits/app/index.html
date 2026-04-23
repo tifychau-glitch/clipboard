@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>clipboard · App UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#F5F6FA;font-family:var(--font-sans);}
+  #root{height:100vh;}
+  *::-webkit-scrollbar{width:8px;height:8px;}
+  *::-webkit-scrollbar-thumb{background:#D4D8E3;border-radius:4px;}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="../shared.jsx"></script>
+<script type="text/babel" src="./components.jsx"></script>
+<script type="text/babel" src="./screens.jsx"></script>
+<script type="text/babel">
+const { useState } = React;
+
+function App() {
+  const [active, setActive] = useState("agents");
+  const [openAgent, setOpenAgent] = useState(null);
+
+  const titles = {
+    dashboard: ["Dashboard", "Your Sunday morning at a glance"],
+    agents: ["My agents", "4 running · 1 paused"],
+    templates: ["Templates", "Pre-built agent teams for your niche"],
+    deals: ["Deals", "12 active · $184k in pipeline"],
+    reports: ["Reports", "Weekly pulse · automation health"],
+    settings: ["Settings", "Workspace · billing · integrations"],
+  };
+
+  let main;
+  if (openAgent) {
+    main = <AgentDetail agent={openAgent} onClose={() => setOpenAgent(null)}/>;
+  } else if (active === "agents") {
+    main = <AgentsScreen onOpen={setOpenAgent}/>;
+  } else if (active === "templates") {
+    main = <TemplatesScreen/>;
+  } else if (active === "dashboard") {
+    main = <DashboardScreen/>;
+  } else {
+    main = <div style={{ padding: 40, color: "#8B90A7", fontFamily: "'DM Sans'" }}>
+      <div style={{ fontFamily: "'DM Mono'", fontSize: 10, letterSpacing: "0.15em" }}>COMING SOON</div>
+      <div style={{ fontFamily: "'Bricolage Grotesque'", fontWeight: 700, fontSize: 20, color: "#12192B", marginTop: 6 }}>
+        This view isn't in the UI kit yet.
+      </div>
+    </div>;
+  }
+
+  const [t, sub] = openAgent ? ["", ""] : titles[active] || ["", ""];
+
+  return (
+    <div data-screen-label="App Kit" style={{ display: "flex", height: "100vh", background: "#F5F6FA" }}>
+      <Sidebar active={active} setActive={(id) => { setActive(id); setOpenAgent(null); }}/>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {!openAgent && <TopBar title={t} subtitle={sub} action={<Button variant="violet" size="sm" icon={I.plus}>New agent</Button>}/>}
+        {main}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

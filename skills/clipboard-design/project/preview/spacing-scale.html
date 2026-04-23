@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Spacing Scale</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .card{width:700px;background:#fff;border:1px solid var(--cb-border);border-radius:var(--radius-xl);padding:24px 28px;display:flex;flex-direction:column;gap:12px;}
+  .row{display:flex;align-items:center;gap:16px;}
+  .token{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;color:var(--cb-muted);width:60px;}
+  .bar{background:#12192B;height:10px;border-radius:2px;}
+  .px{font-family:var(--font-mono);font-size:10px;color:var(--cb-navy);letter-spacing:0.05em;}
+</style>
+</head>
+<body class="cb">
+<div class="card">
+  <div class="row"><span class="token">sp-1</span><div class="bar" style="width:4px"></div><span class="px">4px</span></div>
+  <div class="row"><span class="token">sp-2</span><div class="bar" style="width:8px"></div><span class="px">8px</span></div>
+  <div class="row"><span class="token">sp-3</span><div class="bar" style="width:12px"></div><span class="px">12px</span></div>
+  <div class="row"><span class="token">sp-4</span><div class="bar" style="width:16px"></div><span class="px">16px</span></div>
+  <div class="row"><span class="token">sp-6</span><div class="bar" style="width:24px"></div><span class="px">24px</span></div>
+  <div class="row"><span class="token">sp-8</span><div class="bar" style="width:32px"></div><span class="px">32px</span></div>
+  <div class="row"><span class="token">sp-12</span><div class="bar" style="width:48px"></div><span class="px">48px</span></div>
+  <div class="row"><span class="token">sp-16</span><div class="bar" style="width:64px"></div><span class="px">64px</span></div>
+</div>
+</body>
+</html>

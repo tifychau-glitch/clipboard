@@ -14,6 +14,10 @@ import { api } from "../lib/api";
 import { useDefaultCompany } from "../lib/company";
 import type { CompanySkillListItem } from "../lib/types";
 import { EmptyState } from "../components/EmptyState";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { MonoLabel } from "../components/ui/mono-label";
+import { Pill, type PillColor } from "../components/ui/pill";
 
 export function SkillsPage() {
   const company = useDefaultCompany();
@@ -52,50 +56,63 @@ export function SkillsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Skills</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Reusable instruction packs your agents can pull from. Attach them per agent from the
-            agent's detail page.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => scan.mutate()}
-            disabled={scan.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50"
-          >
-            {scan.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          leftIcon={
+            scan.isPending ? (
+              <Loader2 size={14} className="animate-spin" />
             ) : (
-              <FolderSearch className="size-3.5" />
-            )}
-            Scan my projects
-          </button>
-          <button
-            onClick={() => setShowImport(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            <Download className="size-3.5" /> Import
-          </button>
-          <button
-            onClick={() => setShowNew(true)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-          >
-            <Plus className="size-3.5" /> New skill
-          </button>
-        </div>
-      </header>
+              <FolderSearch size={14} />
+            )
+          }
+          onClick={() => scan.mutate()}
+          disabled={scan.isPending}
+        >
+          Scan my projects
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          leftIcon={<Download size={14} />}
+          onClick={() => setShowImport(true)}
+        >
+          Import
+        </Button>
+        <Button
+          variant="violet"
+          size="sm"
+          leftIcon={<Plus size={14} />}
+          onClick={() => setShowNew(true)}
+        >
+          New skill
+        </Button>
+      </div>
 
       {banner && (
-        <div className="flex items-start justify-between rounded-md border border-border bg-card px-3 py-2 text-sm">
-          <span>{banner}</span>
+        <div
+          className="flex items-start justify-between rounded-xl px-4 py-3"
+          style={{
+            background: "#F0EBFF",
+            border: "1px solid #D4C6FF",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              color: "#5B32C8",
+            }}
+          >
+            {banner}
+          </span>
           <button
             onClick={() => setBanner(null)}
-            className="text-muted-foreground hover:text-foreground"
+            className="transition-colors hover:!text-[color:var(--foreground)]"
+            style={{ color: "#5B32C8" }}
           >
-            <X className="size-4" />
+            <X size={16} />
           </button>
         </div>
       )}
@@ -156,6 +173,12 @@ export function SkillsPage() {
   );
 }
 
+/**
+ * Skill card — design-kit template-card anatomy:
+ *   colored icon square top-left + source pill top-right,
+ *   title (Bricolage 700) + description (DM Sans),
+ *   DM Mono slug + attached-agent count + violet "Open →" CTA.
+ */
 function SkillCard({
   skill,
   onOpen,
@@ -163,53 +186,110 @@ function SkillCard({
   skill: CompanySkillListItem;
   onOpen: () => void;
 }) {
+  const accent = sourceAccent(skill.sourceBadge);
   return (
-    <button
+    <Card
+      interactive
+      padding="none"
+      className="flex flex-col cursor-pointer p-5"
       onClick={onOpen}
-      className="flex flex-col rounded-md border border-border bg-card p-4 text-left transition-colors hover:bg-accent/40"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <BookOpen className="size-4 text-muted-foreground" />
-          <div className="font-medium">{skill.name}</div>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div
+          className="flex items-center justify-center rounded-[10px] shrink-0"
+          style={{
+            width: 40,
+            height: 40,
+            background: accent.squareBg,
+            color: accent.squareFg,
+          }}
+        >
+          <BookOpen size={18} strokeWidth={1.75} />
         </div>
-        <SourceBadge badge={skill.sourceBadge} label={skill.sourceLabel} />
+        <Pill color={accent.pill} dot={false}>
+          {skill.sourceLabel ?? skill.sourceBadge}
+        </Pill>
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
+          fontSize: 16,
+          letterSpacing: "-0.02em",
+          color: "var(--foreground)",
+          marginBottom: 6,
+        }}
+      >
+        {skill.name}
       </div>
       {skill.description && (
-        <div className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+        <div
+          className="line-clamp-2"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 13,
+            color: "var(--fg-body)",
+            lineHeight: 1.55,
+            marginBottom: 12,
+          }}
+        >
           {skill.description}
         </div>
       )}
-      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-        <span className="font-mono">{skill.slug}</span>
-        <span>
-          {skill.attachedAgentCount} agent{skill.attachedAgentCount === 1 ? "" : "s"}
-        </span>
+      <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+        <MonoLabel>{skill.slug}</MonoLabel>
+        <div className="flex items-center gap-3">
+          <span
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 11,
+              color: "var(--muted-foreground)",
+            }}
+          >
+            {skill.attachedAgentCount} agent{skill.attachedAgentCount === 1 ? "" : "s"}
+          </span>
+          <span
+            className="inline-flex items-center gap-1"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 700,
+              fontSize: 12,
+              color: "#7B52E8",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Open →
+          </span>
+        </div>
       </div>
-    </button>
+    </Card>
   );
 }
 
-function SourceBadge({
-  badge,
-  label,
-}: {
-  badge: string;
-  label: string | null;
-}) {
-  const tone =
-    badge === "github"
-      ? "bg-purple-500/10 text-purple-400 border-purple-500/30"
-      : badge === "local"
-      ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
-      : badge === "skills_sh"
-      ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-      : "bg-muted/50 text-muted-foreground border-border";
-  return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase ${tone}`}>
-      {label ?? badge}
-    </span>
-  );
+/**
+ * Source badge color assignment — each source type gets a consistent brand
+ * accent. Violet for external (GitHub / skills.sh), teal for local, yellow
+ * for admin. Keeps the one-accent-per-card rule happy.
+ */
+function sourceAccent(badge: string): {
+  pill: PillColor;
+  squareBg: string;
+  squareFg: string;
+} {
+  switch (badge) {
+    case "github":
+      return { pill: "violet", squareBg: "#F0EBFF", squareFg: "#7B52E8" };
+    case "local":
+      return { pill: "teal", squareBg: "#E6FAF8", squareFg: "#2BBFAD" };
+    case "skills_sh":
+      return { pill: "yellow", squareBg: "#FEF9E7", squareFg: "#B8860B" };
+    default:
+      return {
+        pill: "muted",
+        squareBg: "var(--surface-subtle)",
+        squareFg: "var(--muted-foreground)",
+      };
+  }
 }
 
 function NewSkillDialog({
@@ -468,10 +548,12 @@ function SkillDetailDialog({
                 )}
               </div>
               {detail.data && (
-                <SourceBadge
-                  badge={detail.data.sourceBadge}
-                  label={detail.data.sourceLabel}
-                />
+                <Pill
+                  color={sourceAccent(detail.data.sourceBadge).pill}
+                  dot={false}
+                >
+                  {detail.data.sourceLabel ?? detail.data.sourceBadge}
+                </Pill>
               )}
             </div>
 

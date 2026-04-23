@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Logo — Dark</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .card{width:700px;height:180px;background:var(--cb-navy);border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;gap:16px;position:relative;overflow:hidden;}
+  .card::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);background-size:48px 48px;}
+  .word{font-family:var(--font-display);font-weight:800;font-size:44px;color:#fff;letter-spacing:-1.32px;line-height:1;position:relative;}
+  svg{position:relative;}
+</style>
+</head>
+<body class="cb">
+<div class="card">
+  <svg width="72" height="72" viewBox="0 0 48 48" fill="none">
+    <rect x="6" y="10" width="36" height="33" rx="5" fill="rgba(255,255,255,0.08)"/>
+    <path d="M14 10 H24" stroke="#F6C94E" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M24 10 H34" stroke="#2BBFAD" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M6 14 V43" stroke="#F6C94E" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M42 14 V43" stroke="#2BBFAD" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M6 43 H42" stroke="#7B52E8" stroke-width="3.5" stroke-linecap="round"/>
+    <rect x="17" y="6" width="14" height="8" rx="4" fill="#FFFFFF"/>
+    <rect x="20" y="8" width="8" height="4" rx="2" fill="#12192B"/>
+    <path d="M16 27 L21.5 33 L32 20" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="word">clipboard</span>
+</div>
+</body>
+</html>

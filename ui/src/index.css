@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* =============================================================
+   Clipboard brand tokens
+   Navy dominates. One accent per component.
+   Display: Bricolage Grotesque. Body: DM Sans. Labels: DM Mono.
+   ============================================================= */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -36,82 +42,166 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
+
+  /* Clipboard brand palette (direct access — does NOT flip per theme).
+     Use these when you need a SPECIFIC brand color regardless of mode
+     (e.g. the navy WeeklyPulse card, accent dots, the three-stripe motif). */
+  --color-clipboard-navy: #12192b;
+  --color-clipboard-ink: #1e2435;
+  --color-clipboard-yellow: #f6c94e;
+  --color-clipboard-violet: #7b52e8;
+  --color-clipboard-teal: #2bbfad;
+  --color-clipboard-surface: #f5f6fa;
+  --color-clipboard-muted: #8b90a7;
+  --color-clipboard-muted-2: #4a5068;
+  --color-clipboard-border: #e8eaf0;
+  --color-clipboard-border-strong: #d4d8e3;
+
+  /* Semantic tokens that DO flip with theme. Prefer these in page and
+     component code; the primitives above should only appear when the
+     color carries brand meaning in a specific light-mode composition. */
+  --color-fg-body: var(--fg-body);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-border-strong: var(--border-strong);
+
+  /* Accent tints (soft pill backgrounds + darker ink text colors) */
+  --color-clipboard-yellow-tint: #fef9e7;
+  --color-clipboard-yellow-ink: #b8860b;
+  --color-clipboard-violet-tint: #f0ebff;
+  --color-clipboard-violet-ink: #5b32c8;
+  --color-clipboard-teal-tint: #e6faf8;
+  --color-clipboard-teal-ink: #1a8a7d;
+
+  /* Typography */
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Bricolage Grotesque", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Radius (brand: 10–14px) */
+  --radius-sm: 0.5rem;   /* 8px */
+  --radius-md: 0.625rem; /* 10px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
 }
 
+/* Light mode — the default Clipboard look.
+   Light content surface (#F5F6FA), white cards, navy text,
+   violet primary CTA, navy sidebar.                              */
 :root {
   color-scheme: light;
-  --radius: 0;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.75rem;
+
+  --background: #f5f6fa;           /* App surface */
+  --foreground: #12192b;           /* Navy for headlines */
+
+  --card: #ffffff;
+  --card-foreground: #12192b;
+
+  --popover: #ffffff;
+  --popover-foreground: #12192b;
+
+  /* Violet is the primary CTA on light surfaces ("+ New agent", "Run now"). */
+  --primary: #7b52e8;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f0f2f8;
+  --secondary-foreground: #12192b;
+
+  --muted: #f0f2f8;
+  --muted-foreground: #8b90a7;
+
+  /* Soft violet tint for accent surfaces */
+  --accent: #f0ebff;
+  --accent-foreground: #5b32c8;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e8eaf0;
+  --border-strong: #d4d8e3;
+  --input: #e8eaf0;
+  --ring: #7b52e8;
+
+  /* Body text one shade darker than --muted-foreground — used for
+     description copy inside cards. */
+  --fg-body: #4a5068;
+
+  /* A slightly lifted surface used for hover states on chrome buttons,
+     tab rails, and muted input backgrounds. */
+  --surface-subtle: #f0f2f8;
+
+  /* Chart colors use the brand accents */
+  --chart-1: #f6c94e; /* yellow */
+  --chart-2: #7b52e8; /* violet */
+  --chart-3: #2bbfad; /* teal */
+  --chart-4: #12192b; /* navy */
+  --chart-5: #8b90a7; /* muted */
+
+  /* Sidebar is navy in light mode (hybrid design: light content + navy chrome). */
+  --sidebar: #12192b;
+  --sidebar-foreground: rgba(255, 255, 255, 0.55);
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #12192b;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #7b52e8;
 }
 
+/* Dark mode: navy background, white text, yellow primary CTA, violet accent */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.637 0.237 25.331);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.145 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #12192b;
+  --foreground: #ffffff;
+
+  --card: #1a2238;              /* slightly lifted from navy */
+  --card-foreground: #ffffff;
+
+  --popover: #1a2238;
+  --popover-foreground: #ffffff;
+
+  /* Yellow CTA on navy is the brand's highest-contrast pairing */
+  --primary: #f6c94e;
+  --primary-foreground: #12192b;
+
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #ffffff;
+
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: rgba(255, 255, 255, 0.55);
+
+  /* Violet for agent/product accents on navy */
+  --accent: rgba(123, 82, 232, 0.18);
+  --accent-foreground: #c8b3ff;
+
+  --destructive: #f87171;
+  --destructive-foreground: #12192b;
+
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #7b52e8;
+
+  /* Body text a touch brighter than --muted-foreground so description
+     copy stays readable against the darker card surface. */
+  --fg-body: rgba(255, 255, 255, 0.75);
+
+  /* Hover tint for chrome buttons / tab rails on dark background. */
+  --surface-subtle: rgba(255, 255, 255, 0.06);
+
+  --chart-1: #f6c94e;
+  --chart-2: #7b52e8;
+  --chart-3: #2bbfad;
+  --chart-4: #ffffff;
+  --chart-5: rgba(255, 255, 255, 0.4);
+
+  --sidebar: #0d1320;            /* slightly deeper than navy bg */
+  --sidebar-foreground: rgba(255, 255, 255, 0.75);
+  --sidebar-primary: #f6c94e;
+  --sidebar-primary-foreground: #12192b;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #7b52e8;
 }
 
 @layer base {
@@ -123,11 +213,24 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
   }
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     text-wrap: balance;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  h1 {
+    letter-spacing: -0.035em;
+    font-weight: 800;
+  }
+  button {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
   /* Prevent double-tap-to-zoom on interactive elements for mobile */
   a,
