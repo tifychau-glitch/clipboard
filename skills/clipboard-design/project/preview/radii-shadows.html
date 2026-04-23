@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Radii & Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .wrap{width:700px;padding:24px 0;display:flex;flex-direction:column;gap:18px;}
+  .row{display:flex;gap:14px;align-items:center;}
+  .shape{background:#fff;border:1px solid var(--cb-border);width:88px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:var(--cb-muted);letter-spacing:0.08em;}
+  .shadow{background:#fff;width:88px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:var(--cb-muted);letter-spacing:0.08em;}
+  .eyebrow{font-family:var(--font-mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cb-muted);width:90px;flex-shrink:0;}
+</style>
+</head>
+<body class="cb">
+<div class="wrap">
+  <div class="row">
+    <span class="eyebrow">Radii</span>
+    <div class="shape" style="border-radius:8px">8</div>
+    <div class="shape" style="border-radius:10px">10</div>
+    <div class="shape" style="border-radius:12px">12</div>
+    <div class="shape" style="border-radius:16px">16</div>
+    <div class="shape" style="border-radius:20px">20</div>
+    <div class="shape" style="border-radius:999px">pill</div>
+  </div>
+  <div class="row">
+    <span class="eyebrow">Shadows</span>
+    <div class="shadow" style="box-shadow:0 1px 2px rgba(18,25,43,0.05)">xs</div>
+    <div class="shadow" style="box-shadow:0 1px 6px rgba(18,25,43,0.08)">sm</div>
+    <div class="shadow" style="box-shadow:0 4px 14px rgba(18,25,43,0.08)">md</div>
+    <div class="shadow" style="box-shadow:0 12px 28px rgba(18,25,43,0.14)">lg</div>
+    <div class="shadow" style="box-shadow:0 0 0 3px rgba(123,82,232,0.25)">focus</div>
+  </div>
+</div>
+</body>
+</html>

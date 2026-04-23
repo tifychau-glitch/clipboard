@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Accent Tints</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .wrap{width:700px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .sw{border-radius:var(--radius-lg);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;min-height:72px;}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px 4px 8px;border-radius:999px;font-family:var(--font-sans);font-size:12px;font-weight:500;}
+  .dot{width:7px;height:7px;border-radius:50%;}
+  .hex{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;}
+</style>
+</head>
+<body class="cb">
+<div class="wrap">
+  <div class="sw" style="background:#FEF9E7;">
+    <span class="pill" style="background:#fff;color:#B8860B;"><span class="dot" style="background:#F6C94E"></span>Contracts</span>
+    <span class="hex" style="color:#B8860B">#FEF9E7</span>
+  </div>
+  <div class="sw" style="background:#F0EBFF;">
+    <span class="pill" style="background:#fff;color:#7B52E8;"><span class="dot" style="background:#7B52E8"></span>Agents</span>
+    <span class="hex" style="color:#7B52E8">#F0EBFF</span>
+  </div>
+  <div class="sw" style="background:#E6FAF8;">
+    <span class="pill" style="background:#fff;color:#1A8A7D;"><span class="dot" style="background:#2BBFAD"></span>Live</span>
+    <span class="hex" style="color:#1A8A7D">#E6FAF8</span>
+  </div>
+</div>
+</body>
+</html>

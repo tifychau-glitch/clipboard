@@ -4,14 +4,13 @@
 // agent roster + status, month spend, pending approvals, 14-day run activity,
 // success rate, spending by agent, and recent activity + failures.
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity as ActivityIcon,
   AlertTriangle,
-  Banknote,
-  Bot,
+  ArrowRight,
   CheckCircle2,
   Loader2,
   ShieldCheck,
@@ -21,6 +20,10 @@ import { api } from "../lib/api";
 import { useDefaultCompany } from "../lib/company";
 import { formatRelativeTime, formatTokens, formatUsd } from "../lib/format";
 import type { Agent, HeartbeatRun } from "../lib/types";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { MonoLabel } from "../components/ui/mono-label";
+// (PageHeader removed — layout no longer has a shared top bar.)
 
 // Friendly translations for Paperclip's audit-log action codes.
 // Matches the list used in Activity.tsx so the two views feel consistent.
@@ -45,21 +48,26 @@ function actionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
 }
 
-function statusDot(status: Agent["status"]) {
+/**
+ * Status dot color — brand palette, not Tailwind defaults.
+ *   running          → teal (live / active)
+ *   paused           → yellow (attention)
+ *   pending_approval → violet (agent intelligence / waiting on you)
+ *   error            → destructive red
+ *   idle / active    → muted
+ */
+function statusDotColor(status: Agent["status"]): string {
   switch (status) {
     case "running":
-      return "bg-green-500";
-    case "active":
-    case "idle":
-      return "bg-blue-500";
+      return "#2BBFAD";
     case "paused":
-      return "bg-yellow-500";
-    case "error":
-      return "bg-red-500";
+      return "#F6C94E";
     case "pending_approval":
-      return "bg-purple-500";
+      return "#7B52E8";
+    case "error":
+      return "#DC2626";
     default:
-      return "bg-muted-foreground/50";
+      return "var(--muted-foreground)";
   }
 }
 
@@ -207,38 +215,49 @@ export function DashboardPage() {
 
   const apiSpendUsd = (costsSummary.data?.spendCents ?? 0) / 100;
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Everything happening across {company.data?.name ?? "your business"} at a glance.
-        </p>
-      </div>
+  const pendingCount = (approvals.data ?? []).length;
 
-      {/* Pending approvals banner — always surface these */}
-      {(approvals.data ?? []).length > 0 && (
+  return (
+    <div className="space-y-6">
+      {/* Pending approvals banner — surfaced prominently in brand violet tint. */}
+      {pendingCount > 0 && (
         <Link
           to="/agents"
-          className="flex items-center justify-between gap-3 rounded-md border border-purple-500/30 bg-purple-500/10 px-4 py-3 text-sm text-purple-200 hover:bg-purple-500/15"
+          className="flex items-center justify-between gap-3 rounded-xl border border-[#D4C6FF] bg-[#F0EBFF] px-5 py-3.5 hover:bg-[#E8E0FF] transition-colors"
         >
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="size-4 shrink-0" />
-            <span>
-              {approvals.data!.length} pending approval
-              {approvals.data!.length === 1 ? "" : "s"} waiting for your review.
+          <div className="flex items-center gap-3">
+            <span
+              className="flex size-8 items-center justify-center rounded-full"
+              style={{ background: "#7B52E8", color: "#fff" }}
+            >
+              <ShieldCheck size={16} strokeWidth={2} />
+            </span>
+            <span
+              className="text-sm font-medium"
+              style={{ color: "#5B32C8", fontFamily: "var(--font-sans)" }}
+            >
+              {pendingCount} pending approval{pendingCount === 1 ? "" : "s"} waiting for your review.
             </span>
           </div>
-          <span className="text-xs underline underline-offset-2">Review →</span>
+          <span
+            className="inline-flex items-center gap-1 text-xs font-bold"
+            style={{
+              color: "#5B32C8",
+              fontFamily: "var(--font-display)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Review <ArrowRight size={12} />
+          </span>
         </Link>
       )}
 
-      {/* KPI strip */}
+      {/* KPI strip — Bricolage 800 numbers in brand accents. */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <KpiCard
-          icon={Bot}
           label="Agents enabled"
           value={String(agentStats.enabled)}
+          accent="#2BBFAD"
           hint={
             agentStats.paused || agentStats.pending || agentStats.error
               ? `${agentStats.paused} paused · ${agentStats.pending} pending · ${agentStats.error} error`
@@ -247,16 +266,16 @@ export function DashboardPage() {
           to="/agents"
         />
         <KpiCard
-          icon={ShieldCheck}
           label="Pending approvals"
-          value={String((approvals.data ?? []).length)}
-          hint={(approvals.data ?? []).length === 0 ? "All clear" : "Awaiting review"}
+          value={String(pendingCount)}
+          accent={pendingCount > 0 ? "#7B52E8" : "var(--foreground)"}
+          hint={pendingCount === 0 ? "All clear" : "Awaiting review"}
           to="/agents"
         />
         <KpiCard
-          icon={Banknote}
           label="Month spend"
           value={formatUsd(apiSpendUsd)}
+          accent="#F6C94E"
           hint={
             costsSummary.data?.budgetCents
               ? `${costsSummary.data.utilizationPercent}% of budget`
@@ -265,13 +284,21 @@ export function DashboardPage() {
           to="/spending"
         />
         <KpiCard
-          icon={ActivityIcon}
           label="Total runs"
           value={String(spendStats.runsTotal)}
+          accent="var(--foreground)"
           hint={`${spendStats.subRuns} sub · ${spendStats.apiRuns} API`}
           to="/tasks"
         />
       </section>
+
+      {/* Weekly pulse — the dashboard's brand moment. Navy slab, three-stripe
+          motif, yellow CTA. */}
+      <WeeklyPulse
+        runsTotal={spendStats.runsTotal}
+        successRate={successRate.pct}
+        failures={successRate.bad}
+      />
 
       {/* Charts: run activity + success rate */}
       <section className="grid gap-4 lg:grid-cols-3">
@@ -307,27 +334,38 @@ export function DashboardPage() {
                   <li key={a.id}>
                     <Link
                       to={`/agents/${a.id}`}
-                      className="flex items-center justify-between gap-3 py-2.5 hover:text-primary"
+                      className="flex items-center justify-between gap-3 py-2.5 transition-colors hover:text-[#7B52E8]"
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <span
-                          className={`size-2 shrink-0 rounded-full ${statusDot(a.status)}`}
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ background: statusDotColor(a.status) }}
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{a.name}</div>
+                          <div
+                            className="truncate text-sm font-bold"
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              letterSpacing: "-0.01em",
+                              color: "var(--foreground)",
+                            }}
+                          >
+                            {a.name}
+                          </div>
                           {a.title && (
-                            <div className="truncate text-xs text-muted-foreground">
+                            <div
+                              className="truncate text-xs mt-0.5"
+                              style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}
+                            >
                               {a.title}
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="shrink-0 text-xs text-muted-foreground">
-                        {a.status === "pending_approval" ? "pending" : a.status}
-                        <span className="mx-1.5 opacity-40">·</span>
+                      <MonoLabel tone="muted">
                         {formatRelativeTime(a.lastHeartbeatAt)}
-                      </div>
+                      </MonoLabel>
                     </Link>
                   </li>
                 ))}
@@ -352,34 +390,50 @@ export function DashboardPage() {
           {topSpenders.length === 0 ? (
             <EmptyPanel text="No token usage yet." />
           ) : (
-            <ul className="space-y-3">
+            <ul className="space-y-3.5">
               {topSpenders.map((row) => {
                 const max = topSpenders[0].totalTokens || 1;
                 const pct = Math.max(2, Math.round((row.totalTokens / max) * 100));
                 return (
                   <li key={row.agentId}>
-                    <div className="flex items-baseline justify-between gap-2 text-sm">
+                    <div className="flex items-baseline justify-between gap-2">
                       <Link
                         to={`/agents/${row.agentId}`}
-                        className="truncate font-medium hover:text-primary"
+                        className="truncate text-sm font-bold transition-colors hover:text-[#7B52E8]"
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          letterSpacing: "-0.01em",
+                          color: "var(--foreground)",
+                        }}
                       >
                         {row.agentName}
                       </Link>
-                      <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                      <span
+                        className="shrink-0 text-xs"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          color: "var(--fg-body)",
+                        }}
+                      >
                         {formatTokens(row.totalTokens)}
                       </span>
                     </div>
-                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full"
+                      style={{ background: "var(--surface-subtle)" }}
+                    >
                       <div
-                        className="h-full rounded-full bg-primary/80"
-                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, background: "#7B52E8" }}
                       />
                     </div>
-                    <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
+                    <div className="mt-1 flex items-center justify-between">
+                      <MonoLabel tone="muted">
                         {row.subscriptionRunCount + row.apiRunCount} runs
-                      </span>
-                      <span>{formatUsd(row.costCents / 100)} API</span>
+                      </MonoLabel>
+                      <MonoLabel tone="muted">
+                        {formatUsd(row.costCents / 100)} API
+                      </MonoLabel>
                     </div>
                   </li>
                 );
@@ -406,26 +460,44 @@ export function DashboardPage() {
             <EmptyPanel text="Nothing has happened yet." />
           ) : (
             <ul className="divide-y divide-border">
-              {recentActivity.map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center justify-between gap-3 py-2 text-sm"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
-                      {actionLabel(e.action)}
-                    </span>
-                    {e.agentId && agentNameById.has(e.agentId) && (
-                      <span className="truncate text-xs text-muted-foreground">
-                        {agentNameById.get(e.agentId)}
+              {recentActivity.map((e) => {
+                const tint = activityTint(e.action);
+                return (
+                  <li
+                    key={e.id}
+                    className="flex items-center justify-between gap-3 py-2.5"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className="size-1.5 shrink-0 rounded-full"
+                        style={{ background: tint.dot }}
+                        aria-hidden
+                      />
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap"
+                        style={{
+                          background: tint.bg,
+                          color: tint.fg,
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        {actionLabel(e.action)}
                       </span>
-                    )}
-                  </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatRelativeTime(e.createdAt)}
-                  </span>
-                </li>
-              ))}
+                      {e.agentId && agentNameById.has(e.agentId) && (
+                        <span
+                          className="truncate text-xs"
+                          style={{ color: "var(--fg-body)", fontFamily: "var(--font-sans)" }}
+                        >
+                          {agentNameById.get(e.agentId)}
+                        </span>
+                      )}
+                    </div>
+                    <MonoLabel tone="muted">
+                      {formatRelativeTime(e.createdAt)}
+                    </MonoLabel>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Panel>
@@ -435,29 +507,43 @@ export function DashboardPage() {
           subtitle={recentFailures.length > 0 ? "Runs that errored" : "Nothing to worry about"}
         >
           {recentFailures.length === 0 ? (
-            <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-              <CheckCircle2 className="size-4 text-green-500" />
+            <div
+              className="flex items-center gap-2 py-2 text-sm"
+              style={{ color: "#1A8A7D", fontFamily: "var(--font-sans)" }}
+            >
+              <CheckCircle2 className="size-4" style={{ color: "#2BBFAD" }} />
               No failures recently.
             </div>
           ) : (
             <ul className="divide-y divide-border">
               {recentFailures.map((r) => (
-                <li key={r.id} className="flex items-start gap-3 py-2.5 text-sm">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
+                <li key={r.id} className="flex items-start gap-3 py-2.5">
+                  <AlertTriangle
+                    className="mt-0.5 size-4 shrink-0"
+                    style={{ color: "#DC2626" }}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <Link
                         to={`/agents/${r.agentId}`}
-                        className="truncate font-medium hover:text-primary"
+                        className="truncate text-sm font-bold transition-colors hover:text-[#7B52E8]"
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          letterSpacing: "-0.01em",
+                          color: "var(--foreground)",
+                        }}
                       >
                         {agentNameById.get(r.agentId) ?? "Unknown agent"}
                       </Link>
-                      <span className="shrink-0 text-xs text-muted-foreground">
+                      <MonoLabel tone="muted">
                         {formatRelativeTime(r.finishedAt ?? r.startedAt ?? r.createdAt)}
-                      </span>
+                      </MonoLabel>
                     </div>
                     {r.error && (
-                      <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                      <div
+                        className="mt-1 truncate text-xs"
+                        style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}
+                      >
                         {r.error}
                       </div>
                     )}
@@ -474,31 +560,68 @@ export function DashboardPage() {
 
 // ---------- Subcomponents ----------
 
+/**
+ * KPI tile — Bricolage 800 number in an accent color, DM Mono uppercase
+ * eyebrow below, body-small hint underneath. The accent color is the
+ * only meaningful per-card variation.
+ */
 function KpiCard({
-  icon: Icon,
   label,
   value,
+  accent,
   hint,
   to,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  accent: string;
   hint: string;
   to?: string;
 }) {
   const inner = (
-    <div className="rounded-md border border-border bg-card p-4 transition-colors hover:border-primary/40">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="size-3.5" /> {label}
+    <Card
+      interactive={!!to}
+      padding="none"
+      className="px-5 py-4 h-full"
+    >
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 800,
+          fontSize: 32,
+          color: accent,
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
+        }}
+      >
+        {value}
       </div>
-      <div className="mt-1.5 text-2xl font-semibold">{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
-    </div>
+      <div className="mt-2">
+        <MonoLabel spaced>{label}</MonoLabel>
+      </div>
+      {hint && (
+        <div
+          className="mt-1 text-[11px]"
+          style={{ color: "var(--fg-body)", fontFamily: "var(--font-sans)" }}
+        >
+          {hint}
+        </div>
+      )}
+    </Card>
   );
-  return to ? <Link to={to}>{inner}</Link> : inner;
+  return to ? (
+    <Link to={to} className="block">
+      {inner}
+    </Link>
+  ) : (
+    inner
+  );
 }
 
+/**
+ * Panel — a titled content card. Thin wrapper around Card so Dashboard
+ * stays readable and can pass a headerAction (e.g. "All →").
+ */
 function Panel({
   title,
   subtitle,
@@ -508,28 +631,182 @@ function Panel({
 }: {
   title: string;
   subtitle?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  headerAction?: React.ReactNode;
+  headerAction?: ReactNode;
 }) {
   return (
-    <div className={`rounded-md border border-border bg-card p-4 ${className ?? ""}`}>
-      <div className="mb-3 flex items-baseline justify-between gap-2">
+    <Card padding="md" className={className}>
+      <div className="mb-4 flex items-baseline justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold">{title}</h2>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 700,
+              fontSize: 15,
+              letterSpacing: "-0.02em",
+              color: "var(--foreground)",
+              margin: 0,
+            }}
+          >
+            {title}
+          </h2>
           {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p
+              className="mt-0.5 text-xs"
+              style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}
+            >
+              {subtitle}
+            </p>
           )}
         </div>
         {headerAction}
       </div>
       {children}
-    </div>
+    </Card>
   );
 }
 
 function EmptyPanel({ text }: { text: string }) {
-  return <div className="py-6 text-center text-sm text-muted-foreground">{text}</div>;
+  return (
+    <div
+      className="py-6 text-center text-sm"
+      style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}
+    >
+      {text}
+    </div>
+  );
+}
+
+/**
+ * Weekly pulse — the dashboard's big brand moment. Navy slab, three-stripe
+ * motif, yellow CTA. Copy adapts to whether anything has happened yet.
+ */
+function WeeklyPulse({
+  runsTotal,
+  successRate,
+  failures,
+}: {
+  runsTotal: number;
+  successRate: number;
+  failures: number;
+}) {
+  const hasActivity = runsTotal > 0;
+  return (
+    <section
+      className="relative overflow-hidden rounded-xl px-7 py-6"
+      style={{ background: "#12192B", color: "#fff" }}
+    >
+      {/* Accent blobs */}
+      <div
+        className="pointer-events-none absolute rounded-full"
+        style={{
+          top: -30,
+          right: -20,
+          width: 180,
+          height: 180,
+          background: "#7B52E8",
+          opacity: 0.18,
+          filter: "blur(50px)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute rounded-full"
+        style={{
+          bottom: -40,
+          right: 120,
+          width: 140,
+          height: 140,
+          background: "#F6C94E",
+          opacity: 0.1,
+          filter: "blur(45px)",
+        }}
+      />
+
+      <div className="relative flex flex-wrap items-center justify-between gap-6">
+        <div className="min-w-0 flex-1">
+          {/* Three-stripe motif */}
+          <div className="mb-4 flex gap-1">
+            <span style={{ width: 22, height: 3, borderRadius: 2, background: "#F6C94E" }} />
+            <span style={{ width: 22, height: 3, borderRadius: 2, background: "#2BBFAD" }} />
+            <span style={{ width: 22, height: 3, borderRadius: 2, background: "#7B52E8" }} />
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 800,
+              fontSize: 26,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: 8,
+            }}
+          >
+            {hasActivity
+              ? "Your weekly pulse is ready."
+              : "Your weekly pulse will appear here."}
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              fontWeight: 300,
+              color: "rgba(255,255,255,0.55)",
+              lineHeight: 1.55,
+              maxWidth: 560,
+            }}
+          >
+            {hasActivity
+              ? `${runsTotal} task${runsTotal === 1 ? "" : "s"} handled · ${successRate}% success · ${failures} failure${failures === 1 ? "" : "s"}. Here's what your agents did this week.`
+              : "Once your agents start running, you'll get a summary of what they did every week."}
+          </div>
+        </div>
+        <div className="shrink-0">
+          {/* No dedicated weekly-pulse page exists yet. Route to the
+              closest existing surface: the Activity feed (week's events)
+              when there's data, or the Agents setup when there isn't. */}
+          <Link to={hasActivity ? "/activity" : "/agents"}>
+            <Button
+              variant={hasActivity ? "yellow" : "outline"}
+              size="sm"
+              rightIcon={<ArrowRight size={14} />}
+            >
+              {hasActivity ? "See the activity" : "Set up agents"}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Activity-feed row tint by action code. Maps event categories to brand accents. */
+function activityTint(action: string): { bg: string; fg: string; dot: string } {
+  if (action.startsWith("agent.")) {
+    // Agent lifecycle events use violet (agents are the product).
+    return { bg: "#F0EBFF", fg: "#5B32C8", dot: "#7B52E8" };
+  }
+  if (action.startsWith("heartbeat.")) {
+    if (action === "heartbeat.failed") {
+      return { bg: "#FEE2E2", fg: "#991B1B", dot: "#DC2626" };
+    }
+    if (action === "heartbeat.completed") {
+      return { bg: "#E6FAF8", fg: "#1A8A7D", dot: "#2BBFAD" };
+    }
+    // Queued / invoked / started — neutral-ish with yellow hint of energy.
+    return { bg: "#FEF9E7", fg: "#B8860B", dot: "#F6C94E" };
+  }
+  if (action.startsWith("hire_hook.")) {
+    if (action === "hire_hook.succeeded") {
+      return { bg: "#E6FAF8", fg: "#1A8A7D", dot: "#2BBFAD" };
+    }
+    return { bg: "#FEE2E2", fg: "#991B1B", dot: "#DC2626" };
+  }
+  // Company events, unknowns, everything else.
+  return {
+    bg: "var(--surface-subtle)",
+    fg: "var(--fg-body)",
+    dot: "var(--muted-foreground)",
+  };
 }
 
 // ---------- Charts (inline SVG — no library) ----------
@@ -609,21 +886,15 @@ function RunActivityChart({ data }: { data: DailyActivity }) {
               title={`${b.date}: ${b.succeeded} ok · ${b.failed} failed · ${b.other} other`}
             >
               {total === 0 ? (
-                <div className="h-[2px] w-full rounded-sm bg-muted/70" />
+                <div
+                  className="h-[2px] w-full rounded-sm"
+                  style={{ background: "var(--border)" }}
+                />
               ) : (
                 <div className="flex h-full w-full flex-col-reverse overflow-hidden rounded-sm">
-                  <div
-                    className="w-full bg-green-500/80"
-                    style={{ height: `${okH}%` }}
-                  />
-                  <div
-                    className="w-full bg-red-500/80"
-                    style={{ height: `${badH}%` }}
-                  />
-                  <div
-                    className="w-full bg-muted-foreground/40"
-                    style={{ height: `${otherH}%` }}
-                  />
+                  <div className="w-full" style={{ height: `${okH}%`, background: "#2BBFAD" }} />
+                  <div className="w-full" style={{ height: `${badH}%`, background: "#DC2626" }} />
+                  <div className="w-full" style={{ height: `${otherH}%`, background: "var(--muted-foreground)" }} />
                 </div>
               )}
             </div>
@@ -631,19 +902,31 @@ function RunActivityChart({ data }: { data: DailyActivity }) {
         })}
       </div>
       <div
-        className="mt-1 grid gap-1 text-[10px] text-muted-foreground"
-        style={{ gridTemplateColumns: `repeat(${buckets.length}, minmax(0, 1fr))` }}
+        className="mt-2 grid gap-1"
+        style={{
+          gridTemplateColumns: `repeat(${buckets.length}, minmax(0, 1fr))`,
+        }}
       >
         {buckets.map((b, i) => (
-          <div key={b.date} className="text-center">
+          <div
+            key={b.date}
+            className="text-center"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 9,
+              color: "var(--muted-foreground)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
             {i % 2 === 0 ? b.label.slice(0, 2) : ""}
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-        <Legend color="bg-green-500/80" label="succeeded" />
-        <Legend color="bg-red-500/80" label="failed" />
-        <Legend color="bg-muted-foreground/40" label="other" />
+      <div className="mt-3 flex items-center gap-4">
+        <Legend color="#2BBFAD" label="succeeded" />
+        <Legend color="#DC2626" label="failed" />
+        <Legend color="var(--muted-foreground)" label="other" />
       </div>
     </div>
   );
@@ -651,8 +934,14 @@ function RunActivityChart({ data }: { data: DailyActivity }) {
 
 function Legend({ color, label }: { color: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`inline-block size-2 rounded-sm ${color}`} />
+    <span
+      className="inline-flex items-center gap-1.5 text-xs"
+      style={{ color: "var(--fg-body)", fontFamily: "var(--font-sans)" }}
+    >
+      <span
+        className="inline-block size-2 rounded-sm"
+        style={{ background: color }}
+      />
       {label}
     </span>
   );
@@ -671,22 +960,20 @@ function SuccessDonut({ pct, ok, bad }: { pct: number; ok: number; bad: number }
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="currentColor"
+          stroke="var(--border)"
           strokeWidth={stroke}
           fill="none"
-          className="text-muted/60"
         />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="currentColor"
+          stroke="#2BBFAD"
           strokeWidth={stroke}
           fill="none"
           strokeDasharray={`${dash} ${c - dash}`}
           strokeDashoffset={c / 4}
           strokeLinecap="round"
-          className="text-green-500"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
         <text
@@ -694,21 +981,45 @@ function SuccessDonut({ pct, ok, bad }: { pct: number; ok: number; bad: number }
           y="50%"
           dominantBaseline="middle"
           textAnchor="middle"
-          className="fill-foreground text-xl font-semibold"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 800,
+            fontSize: 22,
+            fill: "var(--foreground)",
+            letterSpacing: "-0.025em",
+          }}
         >
           {pct}%
         </text>
       </svg>
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2.5">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-green-500" />
-          <span className="font-mono">{ok}</span>
-          <span className="text-muted-foreground">succeeded</span>
+          <CheckCircle2 className="size-4" style={{ color: "#2BBFAD" }} />
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 800,
+              fontSize: 15,
+              color: "var(--foreground)",
+            }}
+          >
+            {ok}
+          </span>
+          <MonoLabel tone="muted">succeeded</MonoLabel>
         </div>
         <div className="flex items-center gap-2">
-          <XCircle className="size-4 text-red-500" />
-          <span className="font-mono">{bad}</span>
-          <span className="text-muted-foreground">failed</span>
+          <XCircle className="size-4" style={{ color: "#DC2626" }} />
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 800,
+              fontSize: 15,
+              color: "var(--foreground)",
+            }}
+          >
+            {bad}
+          </span>
+          <MonoLabel tone="muted">failed</MonoLabel>
         </div>
       </div>
     </div>

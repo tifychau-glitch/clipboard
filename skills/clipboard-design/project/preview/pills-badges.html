@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pills & Badges</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .card{width:700px;background:#fff;border:1px solid var(--cb-border);border-radius:var(--radius-xl);padding:28px 36px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px 4px 8px;border-radius:999px;font-family:var(--font-sans);font-size:12px;font-weight:500;}
+  .dot{width:7px;height:7px;border-radius:50%;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;}
+  .status{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;}
+</style>
+</head>
+<body class="cb">
+<div class="card">
+  <div class="row">
+    <span class="pill" style="background:#FEF9E7;color:#B8860B"><span class="dot" style="background:#F6C94E"></span>Contracts</span>
+    <span class="pill" style="background:#F0EBFF;color:#7B52E8"><span class="dot" style="background:#7B52E8"></span>Agents</span>
+    <span class="pill" style="background:#E6FAF8;color:#1A8A7D"><span class="dot" style="background:#2BBFAD"></span>Live</span>
+    <span class="pill" style="background:#F5F6FA;color:#8B90A7"><span class="dot" style="background:#8B90A7"></span>Paused</span>
+  </div>
+  <div class="row">
+    <span class="status" style="color:#1A8A7D">● Running</span>
+    <span class="status" style="color:#8B90A7">● Paused</span>
+    <span class="status" style="color:#B8860B">● Needs review</span>
+    <span class="status" style="color:#7B52E8">● Processing</span>
+  </div>
+</div>
+</body>
+</html>

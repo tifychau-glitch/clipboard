@@ -6,6 +6,8 @@ import { api } from "../lib/api";
 import { useDefaultCompany } from "../lib/company";
 import { formatTokens, formatUsd } from "../lib/format";
 import { isMeteredAgent, type Agent } from "../lib/types";
+import { Card } from "../components/ui/card";
+import { MonoLabel } from "../components/ui/mono-label";
 
 export function SpendingPage() {
   const company = useDefaultCompany();
@@ -89,13 +91,6 @@ export function SpendingPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Spending</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Subscription runs are covered by your Claude plan. API runs incur real dollars.
-        </p>
-      </div>
-
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
           label="Total tokens"
@@ -121,22 +116,33 @@ export function SpendingPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wide">
-          Per agent (lifetime)
-        </h2>
+        <div className="mb-3">
+          <MonoLabel spaced>Per agent · lifetime</MonoLabel>
+        </div>
         {byAgent.isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div
+            className="flex items-center gap-2"
+            style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)", fontSize: 13 }}
+          >
             <Loader2 className="size-4 animate-spin" /> Loading…
           </div>
         ) : !byAgent.data || byAgent.data.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          <div
+            className="rounded-xl p-6 text-center"
+            style={{
+              border: "1px dashed var(--border-strong)",
+              color: "var(--muted-foreground)",
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+            }}
+          >
             No agents yet.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-border bg-card">
-            <table className="min-w-full text-sm">
+          <Card padding="none" className="overflow-x-auto">
+            <table className="min-w-full">
               <thead>
-                <tr className="border-b border-border text-xs text-muted-foreground">
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
                   <Th>Agent</Th>
                   <Th align="right">Runs</Th>
                   <Th align="right">Input</Th>
@@ -158,25 +164,45 @@ export function SpendingPage() {
                     budget && metered
                       ? Math.min(100, Math.round((spent / budget) * 100))
                       : null;
-                  const budgetColor =
+                  const budgetStyle: React.CSSProperties =
                     pct == null
-                      ? ""
+                      ? { color: "var(--muted-foreground)" }
                       : pct >= 100
-                      ? "text-red-400"
+                      ? { color: "#991B1B", fontWeight: 500 }
                       : pct >= 80
-                      ? "text-amber-400"
-                      : "text-muted-foreground";
+                      ? { color: "#B8860B", fontWeight: 500 }
+                      : { color: "var(--fg-body)" };
 
                   return (
-                    <tr key={row.agentId} className="border-b border-border last:border-0">
+                    <tr
+                      key={row.agentId}
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                      className="last:!border-0"
+                    >
                       <Td>
                         <Link
                           to={`/agents/${row.agentId}`}
-                          className="font-medium hover:text-primary"
+                          className="transition-colors hover:text-[#7B52E8]"
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontWeight: 700,
+                            fontSize: 13,
+                            letterSpacing: "-0.01em",
+                            color: "var(--foreground)",
+                          }}
                         >
                           {row.agentName}
                         </Link>
-                        <div className="text-xs text-muted-foreground">{row.agentStatus}</div>
+                        <div
+                          className="mt-0.5"
+                          style={{
+                            fontFamily: "var(--font-sans)",
+                            fontSize: 11,
+                            color: "var(--muted-foreground)",
+                          }}
+                        >
+                          {row.agentStatus}
+                        </div>
                       </Td>
                       <Td align="right">
                         <div>{subRuns + apiRuns}</div>
@@ -195,15 +221,15 @@ export function SpendingPage() {
                       <Td align="right">
                         {!metered ? (
                           <span
-                            className="text-muted-foreground/70"
+                            style={{ color: "var(--muted-foreground)" }}
                             title="Subscription agents don't incur per-dollar cost. Budget is inactive."
                           >
                             Subscription
                           </span>
                         ) : budget == null ? (
-                          <span className="text-muted-foreground/60">No limit</span>
+                          <span style={{ color: "var(--muted-foreground)" }}>No limit</span>
                         ) : (
-                          <span className={budgetColor}>
+                          <span style={budgetStyle}>
                             {formatUsd(spent / 100)} / {formatUsd(budget / 100)}
                           </span>
                         )}
@@ -213,13 +239,18 @@ export function SpendingPage() {
                 })}
               </tbody>
             </table>
-          </div>
+          </Card>
         )}
       </section>
     </div>
   );
 }
 
+/**
+ * KPI tile — same visual pattern as the Dashboard KPI. Bricolage 800
+ * accent-colored number, DM Mono eyebrow, DM Sans hint below.
+ * `alert` flips the accent to destructive red.
+ */
 function Stat({
   label,
   value,
@@ -231,21 +262,50 @@ function Stat({
   hint: string;
   alert?: boolean;
 }) {
+  const accent = alert ? "#DC2626" : "var(--foreground)";
   return (
-    <div className={`rounded-md border bg-card p-4 ${alert ? "border-red-500/40" : "border-border"}`}>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-2xl font-semibold ${alert ? "text-red-400" : ""}`}>{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
-    </div>
+    <Card padding="none" className="px-5 py-4">
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 800,
+          fontSize: 28,
+          color: accent,
+          letterSpacing: "-0.025em",
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </div>
+      <div className="mt-2">
+        <MonoLabel spaced>{label}</MonoLabel>
+      </div>
+      {hint && (
+        <div
+          className="mt-1 text-[11px]"
+          style={{ color: "var(--fg-body)", fontFamily: "var(--font-sans)" }}
+        >
+          {hint}
+        </div>
+      )}
+    </Card>
   );
 }
 
 function Th({ children, align }: { children: React.ReactNode; align?: "right" }) {
   return (
     <th
-      className={`px-4 py-2 font-medium uppercase tracking-wide ${
+      className={`px-4 py-3 whitespace-nowrap ${
         align === "right" ? "text-right" : "text-left"
       }`}
+      style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: 10,
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+        fontWeight: 500,
+        color: "var(--muted-foreground)",
+      }}
     >
       {children}
     </th>
@@ -263,9 +323,12 @@ function Td({
 }) {
   return (
     <td
-      className={`px-4 py-3 ${align === "right" ? "text-right" : ""} ${
-        mono ? "font-mono" : ""
-      }`}
+      className={`px-4 py-3 ${align === "right" ? "text-right" : ""}`}
+      style={{
+        fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)",
+        fontSize: 13,
+        color: "var(--foreground)",
+      }}
     >
       {children}
     </td>

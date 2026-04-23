@@ -1,14 +1,14 @@
 {
   "id": "/",
-  "name": "Paperclip",
-  "short_name": "Paperclip",
-  "description": "AI-powered project management and agent coordination platform",
+  "name": "clipboard",
+  "short_name": "clipboard",
+  "description": "Pre-built AI agent teams for business operators. Your business, handled.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "theme_color": "#18181b",
-  "background_color": "#18181b",
+  "theme_color": "#12192b",
+  "background_color": "#f5f6fa",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

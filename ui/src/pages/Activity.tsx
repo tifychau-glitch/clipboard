@@ -7,6 +7,8 @@ import { useDefaultCompany } from "../lib/company";
 import { formatRelativeTime } from "../lib/format";
 import type { ActivityRow, Agent } from "../lib/types";
 import { EmptyState } from "../components/EmptyState";
+import { Select } from "../components/ui/input";
+import { MonoLabel } from "../components/ui/mono-label";
 
 // Friendly translations for Paperclip's audit-log action codes.
 const ACTION_LABELS: Record<string, string> = {
@@ -79,17 +81,11 @@ export function ActivityPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Activity</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Everything that happens across your agents — system events, hires, tasks.
-          </p>
-        </div>
-        <select
+      <div className="flex items-center justify-end mb-5">
+        <Select
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
-          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="py-1.5 text-sm w-auto min-w-[160px]"
         >
           <option value="">All actions</option>
           {distinctActions.map((a) => (
@@ -97,7 +93,7 @@ export function ActivityPage() {
               {actionLabel(a)}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {events.isLoading ? (
@@ -127,27 +123,102 @@ export function ActivityPage() {
   );
 }
 
+/**
+ * Activity feed row — design-kit row anatomy: colored leading dot that
+ * encodes the event category, tinted action pill, agent name, optional
+ * detail, DM Mono timestamp trailing.
+ */
 function ActivityItem({ event, agent }: { event: ActivityRow; agent: Agent | null }) {
   const detail = describeDetails(event.details);
+  const tint = activityTint(event.action);
   return (
-    <li className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm">
+    <li
+      className="flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 transition-[box-shadow,transform] duration-150"
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        boxShadow: "0 1px 6px rgba(18,25,43,0.04)",
+      }}
+    >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="rounded-full bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+        <span
+          aria-hidden
+          className="size-1.5 shrink-0 rounded-full"
+          style={{ background: tint.dot }}
+        />
+        <span
+          className="rounded-full px-2.5 py-0.5 whitespace-nowrap"
+          style={{
+            background: tint.bg,
+            color: tint.fg,
+            fontFamily: "var(--font-sans)",
+            fontSize: 11,
+            fontWeight: 500,
+          }}
+        >
           {actionLabel(event.action)}
         </span>
         {agent && (
           <Link
             to={`/agents/${agent.id}`}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="transition-colors hover:text-[#7B52E8]"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: 13,
+              letterSpacing: "-0.01em",
+              color: "var(--foreground)",
+            }}
           >
             {agent.name}
           </Link>
         )}
-        {detail && <span className="truncate text-muted-foreground">{detail}</span>}
+        {detail && (
+          <span
+            className="truncate"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 12,
+              color: "var(--fg-body)",
+            }}
+          >
+            {detail}
+          </span>
+        )}
       </div>
-      <span className="text-xs text-muted-foreground">{formatRelativeTime(event.createdAt)}</span>
+      <MonoLabel tone="muted">{formatRelativeTime(event.createdAt)}</MonoLabel>
     </li>
   );
+}
+
+/**
+ * Same categorization as the Dashboard's activity feed so the two views
+ * read as one system.
+ */
+function activityTint(action: string): { bg: string; fg: string; dot: string } {
+  if (action.startsWith("agent.")) {
+    return { bg: "#F0EBFF", fg: "#5B32C8", dot: "#7B52E8" };
+  }
+  if (action.startsWith("heartbeat.")) {
+    if (action === "heartbeat.failed") {
+      return { bg: "#FEE2E2", fg: "#991B1B", dot: "#DC2626" };
+    }
+    if (action === "heartbeat.completed") {
+      return { bg: "#E6FAF8", fg: "#1A8A7D", dot: "#2BBFAD" };
+    }
+    return { bg: "#FEF9E7", fg: "#B8860B", dot: "#F6C94E" };
+  }
+  if (action.startsWith("hire_hook.")) {
+    if (action === "hire_hook.succeeded") {
+      return { bg: "#E6FAF8", fg: "#1A8A7D", dot: "#2BBFAD" };
+    }
+    return { bg: "#FEE2E2", fg: "#991B1B", dot: "#DC2626" };
+  }
+  return {
+    bg: "var(--surface-subtle)",
+    fg: "var(--fg-body)",
+    dot: "var(--muted-foreground)",
+  };
 }
 
 function describeDetails(details: Record<string, unknown> | null): string | null {

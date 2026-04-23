@@ -10,6 +10,10 @@ import { AddAgentDialog } from "../components/AddAgentDialog";
 import { EmptyState } from "../components/EmptyState";
 import { AgentCardSkeleton } from "../components/Skeleton";
 import { StatusBadge } from "../components/StatusBadge";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { MonoLabel } from "../components/ui/mono-label";
+import { Pill } from "../components/ui/pill";
 
 export function AgentsPage() {
   const company = useDefaultCompany();
@@ -54,18 +58,19 @@ export function AgentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Agents</h1>
-        <button
+      <div className="flex items-center justify-end mb-5">
+        <Button
+          variant="violet"
+          size="sm"
+          leftIcon={<Plus size={14} />}
           onClick={() => setAdding(true)}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          <Plus className="size-4" /> Add Agent
-        </button>
+          New agent
+        </Button>
       </div>
 
       {agents.isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <AgentCardSkeleton key={i} />
           ))}
@@ -78,7 +83,7 @@ export function AgentsPage() {
           action={{ label: "Add agent", onClick: () => setAdding(true) }}
         />
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {agents.data
             ?.slice()
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
@@ -113,15 +118,28 @@ function BudgetBar({ agent }: { agent: Agent }) {
   const pct = Math.min(100, Math.round((spent / budget) * 100));
   const isAtLimit = pct >= 100;
   const isNear = pct >= 80 && !isAtLimit;
-  const barColor = isAtLimit ? "bg-red-500" : isNear ? "bg-amber-500" : "bg-green-500";
+  // Brand palette: teal healthy → yellow approaching → red at-limit.
+  const barColor = isAtLimit ? "#DC2626" : isNear ? "#F6C94E" : "#2BBFAD";
 
   return (
     <div className="mt-4">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+      <div
+        className="h-1.5 w-full overflow-hidden rounded-full"
+        style={{ background: "var(--surface-subtle)" }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, background: barColor }}
+        />
       </div>
       {(isNear || isAtLimit) && (
-        <div className={`mt-1 flex items-center gap-1 text-xs ${isAtLimit ? "text-red-400" : "text-amber-400"}`}>
+        <div
+          className="mt-1.5 flex items-center gap-1 text-xs"
+          style={{
+            color: isAtLimit ? "#991B1B" : "#B8860B",
+            fontFamily: "var(--font-sans)",
+          }}
+        >
           <AlertTriangle className="size-3" />
           {isAtLimit ? "Budget reached" : "Approaching limit"}
         </div>
@@ -168,98 +186,172 @@ function AgentCard({
   const isCeo = isCeoAgent(agent);
 
   return (
-    <div className="group rounded-lg border border-border bg-card shadow-sm transition-colors hover:border-primary/40">
-      <Link to={`/agents/${agent.id}`} className="block p-4">
-        <div className="flex items-start justify-between gap-2">
+    <Card interactive padding="none" className="overflow-hidden">
+      <Link to={`/agents/${agent.id}`} className="block p-5">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="font-medium group-hover:text-primary">{agent.name}</div>
+            <div
+              className="truncate"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 700,
+                fontSize: 15,
+                letterSpacing: "-0.02em",
+                color: "var(--foreground)",
+              }}
+            >
+              {agent.name}
+            </div>
             {agent.title && (
-              <div className="text-xs text-muted-foreground">{agent.title}</div>
+              <div
+                className="truncate mt-0.5"
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 12,
+                  color: "var(--muted-foreground)",
+                }}
+              >
+                {agent.title}
+              </div>
             )}
             {isCeo && (
-              <div className="mt-0.5 text-[11px] text-muted-foreground/80">
+              <div
+                className="mt-1"
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 11,
+                  color: "var(--muted-foreground)",
+                }}
+              >
                 Receives tasks from owner
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {isCeo && (
-              <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-                CEO
-              </span>
-            )}
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {isCeo && <Pill color="violet" dot={false}>CEO</Pill>}
             <StatusBadge status={agent.status} />
           </div>
         </div>
         {agent.capabilities && (
-          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+          <p
+            className="mt-3 line-clamp-2"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              color: "var(--fg-body)",
+              lineHeight: 1.55,
+            }}
+          >
             {agent.capabilities}
           </p>
         )}
-        <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+        <dl className="mt-4 grid grid-cols-2 gap-3">
           <div>
-            <dt className="opacity-70">Model</dt>
-            <dd className="font-mono text-foreground">{model}</dd>
+            <MonoLabel>Model</MonoLabel>
+            <dd
+              className="mt-1 truncate"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--foreground)",
+              }}
+            >
+              {model}
+            </dd>
           </div>
           <div>
-            <dt className="opacity-70">Last active</dt>
-            <dd>{formatRelativeTime(agent.lastHeartbeatAt)}</dd>
+            <MonoLabel>Last active</MonoLabel>
+            <dd
+              className="mt-1"
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: 12,
+                color: "var(--fg-body)",
+              }}
+            >
+              {formatRelativeTime(agent.lastHeartbeatAt)}
+            </dd>
           </div>
           {cwd && (
             <div className="col-span-2">
-              <dt className="opacity-70">Working directory</dt>
-              <dd className="truncate font-mono text-foreground">{cwd.replace(/\/Users\/[^/]+/, "~")}</dd>
+              <MonoLabel>Working directory</MonoLabel>
+              <dd
+                className="mt-1 truncate"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  color: "var(--fg-body)",
+                }}
+              >
+                {cwd.replace(/\/Users\/[^/]+/, "~")}
+              </dd>
             </div>
           )}
         </dl>
         <BudgetBar agent={agent} />
       </Link>
-      <div className="flex gap-2 border-t border-border px-4 py-3">
+      <div
+        className="flex gap-2 px-5 py-3"
+        style={{ borderTop: "1px solid var(--border)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {isPendingApproval ? (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 !border-[#2BBFAD] !text-[#1A8A7D] hover:!bg-[#E6FAF8]"
             onClick={() => approve.mutate()}
             disabled={approve.isPending || !pendingApprovalId}
+            leftIcon={
+              approve.isPending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Check size={14} />
+              )
+            }
             title={
               !pendingApprovalId
                 ? "No pending approval record found for this agent."
                 : undefined
             }
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-green-500/40 bg-green-500/10 px-2.5 py-1.5 text-xs text-green-400 hover:bg-green-500/20 disabled:opacity-50"
           >
-            {approve.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <Check className="size-3.5" />
-            )}
             Approve
-          </button>
+          </Button>
         ) : isPaused ? (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
             onClick={() => resume.mutate()}
             disabled={resume.isPending}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+            leftIcon={<Play size={14} />}
           >
-            <Play className="size-3.5" /> Resume
-          </button>
+            Resume
+          </Button>
         ) : (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
             onClick={() => pause.mutate()}
             disabled={pause.isPending}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+            leftIcon={<Pause size={14} />}
           >
-            <Pause className="size-3.5" /> Pause
-          </button>
+            Pause
+          </Button>
         )}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => {
             if (confirm(`Remove agent "${agent.name}"?`)) remove.mutate();
           }}
           disabled={remove.isPending}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+          className="!text-[#DC2626] hover:!border-[#DC2626] hover:!bg-[#FEE2E2]"
         >
-          <Trash2 className="size-3.5" />
-        </button>
+          <Trash2 size={14} />
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

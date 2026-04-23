@@ -24,6 +24,10 @@ import {
 import { EmptyState } from "../components/EmptyState";
 import { RunRowSkeleton } from "../components/Skeleton";
 import { StatusBadge } from "../components/StatusBadge";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { MonoLabel } from "../components/ui/mono-label";
+import { Textarea, Select as BrandSelect } from "../components/ui/input";
 
 export function TasksPage() {
   const company = useDefaultCompany();
@@ -74,13 +78,6 @@ export function TasksPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Tasks</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tell your CEO what you want to accomplish. They'll figure out who handles it.
-        </p>
-      </div>
-
       {agents.data && agents.data.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border p-12 text-center">
           <h2 className="text-lg font-medium">No agents yet</h2>
@@ -207,20 +204,55 @@ function TellCeoComposer({
 
   return (
     <section>
-      <div className="rounded-md border border-border bg-card p-5">
-        <h2 className="text-lg font-semibold">What do you want to accomplish?</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <Card padding="lg">
+        <h2
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 800,
+            fontSize: 22,
+            letterSpacing: "-0.025em",
+            color: "var(--foreground)",
+            margin: 0,
+          }}
+        >
+          What do you want to accomplish?
+        </h2>
+        <p
+          className="mt-1"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 13,
+            color: "var(--muted-foreground)",
+          }}
+        >
           Your CEO will figure out who handles it.
         </p>
 
         {!ceo ? (
-          <div className="mt-4 flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-400" />
+          <div
+            className="mt-4 flex items-start gap-3 rounded-xl p-3.5"
+            style={{
+              background: "#FEF9E7",
+              border: "1px solid #F6C94E",
+              color: "#B8860B",
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+            }}
+          >
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
             <div>
-              <div className="font-medium">No CEO agent found.</div>
-              <div className="mt-0.5 text-muted-foreground">
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                No CEO agent found.
+              </div>
+              <div className="mt-0.5" style={{ color: "#8B860B" }}>
                 Add one from the{" "}
-                <Link to="/agents" className="text-primary hover:underline">
+                <Link to="/agents" className="underline underline-offset-2">
                   Agents tab
                 </Link>{" "}
                 to use this feature.
@@ -229,52 +261,72 @@ function TellCeoComposer({
           </div>
         ) : (
           <>
-            <textarea
+            <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               disabled={send.isPending}
               rows={4}
               placeholder={
-                "e.g. Get a social post written about our latest deal, or: I want to bring in an extra $5k this month — figure out what we should focus on."
+                "e.g. Get a social post written about our latest deal, or: I want to bring in an extra $5k this month, figure out what we should focus on."
               }
-              className="mt-4 w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              className="mt-4 resize-none"
             />
             <label
-              className="mt-3 flex cursor-pointer items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+              className="mt-3 flex cursor-pointer items-center gap-2"
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: 12,
+                color: "var(--muted-foreground)",
+              }}
               title="CEO will outline the delegation plan and wait for your approval before sending work to agents"
             >
               <input
                 type="checkbox"
                 checked={askForPlan}
                 onChange={(e) => setAskForPlan(e.target.checked)}
-                className="size-3.5 rounded border-border accent-primary"
+                className="size-3.5 rounded"
+                style={{ accentColor: "#7B52E8" }}
               />
               Ask for a plan before starting
             </label>
 
-            {error && <div className="mt-3 text-sm text-destructive">{error}</div>}
-
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-xs text-muted-foreground">
-                Goes to {ceo.name}
-                {ceo.title ? ` (${ceo.title})` : ""}.
+            {error && (
+              <div
+                className="mt-3"
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 13,
+                  color: "#DC2626",
+                }}
+              >
+                {error}
               </div>
-              <button
+            )}
+
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <MonoLabel>
+                Goes to {ceo.name}
+                {ceo.title ? ` · ${ceo.title}` : ""}
+              </MonoLabel>
+              <Button
+                variant="violet"
+                size="sm"
                 onClick={() => send.mutate()}
                 disabled={send.isPending || !prompt.trim()}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                leftIcon={
+                  send.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )
+                }
               >
-                {send.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
-                Send to CEO →
-              </button>
+                Send to CEO
+              </Button>
             </div>
           </>
         )}
-      </div>
+      </Card>
     </section>
   );
 }
@@ -314,18 +366,25 @@ function ComposeTask({ agents, onSent }: { agents: Agent[]; onSent: () => void }
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wide">
-        Send a task
-      </h2>
-      <div className="rounded-md border border-border bg-card p-4">
+      <div className="mb-3">
+        <MonoLabel spaced>Send a task</MonoLabel>
+      </div>
+      <Card padding="md">
         <div className="flex flex-wrap items-center gap-3">
-          <label className="text-sm">
-            <span className="mr-2 text-muted-foreground">To:</span>
-            <select
+          <label
+            className="flex items-center gap-2"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              color: "var(--fg-body)",
+            }}
+          >
+            <span style={{ color: "var(--muted-foreground)" }}>To:</span>
+            <BrandSelect
               value={agentId}
               onChange={(e) => setAgentId(e.target.value)}
               disabled={send.isPending || candidates.length === 0}
-              className="rounded-md border border-border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-auto min-w-[160px] py-1.5 text-sm"
             >
               {candidates.length === 0 && <option value="">No active agents</option>}
               {candidates.map((a) => (
@@ -334,10 +393,10 @@ function ComposeTask({ agents, onSent }: { agents: Agent[]; onSent: () => void }
                   {a.title ? ` — ${a.title}` : ""}
                 </option>
               ))}
-            </select>
+            </BrandSelect>
           </label>
         </div>
-        <textarea
+        <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           disabled={send.isPending || candidates.length === 0}
@@ -347,23 +406,41 @@ function ComposeTask({ agents, onSent }: { agents: Agent[]; onSent: () => void }
               ? "All agents are paused or none exist."
               : "Tell the agent what to do…"
           }
-          className="mt-3 w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+          className="mt-3 resize-none"
         />
-        {error && <div className="mt-2 text-sm text-destructive">{error}</div>}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
-            Each task starts fresh. Output appears below.
+        {error && (
+          <div
+            className="mt-2"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              color: "#DC2626",
+            }}
+          >
+            {error}
           </div>
-          <button
+        )}
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <MonoLabel>
+            Each task starts fresh. Output appears below.
+          </MonoLabel>
+          <Button
+            variant="violet"
+            size="sm"
             onClick={() => send.mutate()}
             disabled={send.isPending || !prompt.trim() || !agentId}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            leftIcon={
+              send.isPending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Send size={14} />
+              )
+            }
           >
-            {send.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Send
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </section>
   );
 }

@@ -10,6 +10,31 @@ import { StatusBadge } from "../components/StatusBadge";
 
 type TreeNode = { agent: Agent; children: TreeNode[] };
 
+/**
+ * Left-stripe color per agent status. Each color maps to a brand-defined
+ * meaning so the stripe is a useful signal, not decoration:
+ *   - teal     → live / active / success   (running)
+ *   - yellow   → needs attention            (paused)
+ *   - violet   → agent intelligence         (pending approval)
+ *   - red      → error                      (error)
+ *   - null     → idle or unknown; no stripe so it doesn't compete for attention
+ * Root cards ignore this and show the three-stripe brand motif instead.
+ */
+function stripeFor(status: string): string | null {
+  switch (status.toLowerCase()) {
+    case "running":
+      return "#2BBFAD";
+    case "paused":
+      return "#F6C94E";
+    case "pending_approval":
+      return "#7B52E8";
+    case "error":
+      return "#DC2626";
+    default:
+      return null;
+  }
+}
+
 function buildForest(agents: Agent[]): TreeNode[] {
   const byId = new Map<string, Agent>();
   for (const a of agents) byId.set(a.id, a);
@@ -110,22 +135,20 @@ export function OrgChartPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Org chart</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Drag any agent onto another to change who they report to. Click an agent to assign them a task.
-          </p>
-        </div>
-      </div>
-
       {empty ? (
         <div className="mt-12 rounded-lg border border-dashed border-border bg-card/30 p-12 text-center text-sm text-muted-foreground">
           No agents yet. Add some on the Agents tab.
         </div>
       ) : (
         <div
-          className="mt-6 overflow-x-auto rounded-lg border border-border bg-card p-8"
+          className="relative mt-6 overflow-x-auto rounded-xl border border-border bg-card p-8"
+          style={{
+            // Subtle grid background — matches the design kit's hero pattern
+            // at a lighter opacity for content areas.
+            backgroundImage: `linear-gradient(rgba(18,25,43,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(18,25,43,0.035) 1px, transparent 1px)`,
+            backgroundSize: "32px 32px",
+            boxShadow: "0 1px 6px rgba(18,25,43,0.06)",
+          }}
           onDragOver={(e) => {
             // Drop on the background = make root (no manager).
             if (draggingId) {
@@ -142,17 +165,38 @@ export function OrgChartPage() {
             setDraggingId(null);
           }}
         >
+          {/* Three-stripe brand motif — this canvas IS a brand moment
+              (the shape of your AI company). Small, top-left, non-decorative. */}
+          <div className="mb-7 flex items-center gap-1.5">
+            <span style={{ width: 26, height: 4, borderRadius: 2, background: "#F6C94E" }} />
+            <span style={{ width: 26, height: 4, borderRadius: 2, background: "#2BBFAD" }} />
+            <span style={{ width: 26, height: 4, borderRadius: 2, background: "#7B52E8" }} />
+            <span
+              className="ml-3"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "var(--muted-foreground)",
+              }}
+            >
+              Your org
+            </span>
+          </div>
+
           {dropHover === "root" && draggingId && (
             <div className="mb-4 rounded-md border border-dashed border-primary bg-primary/5 px-3 py-2 text-xs text-primary">
               Drop here to remove manager (become a root)
             </div>
           )}
 
-          <div className="flex flex-wrap items-start justify-center gap-x-12 gap-y-16">
+          <div className="relative flex flex-wrap items-start justify-center gap-x-12 gap-y-16">
             {forest.map((root) => (
               <TreeNodeView
                 key={root.agent.id}
                 node={root}
+                isRoot
                 draggingId={draggingId}
                 forbidden={forbiddenTargets}
                 dropHover={dropHover}
@@ -204,23 +248,31 @@ type NodeHandlers = {
   onDelegate: (manager: Agent, report: Agent) => void;
 };
 
-function TreeNodeView({ node, ...h }: { node: TreeNode } & NodeHandlers) {
+function TreeNodeView({
+  node,
+  isRoot = false,
+  ...h
+}: { node: TreeNode; isRoot?: boolean } & NodeHandlers) {
+  const lineStyle = { background: "var(--border-strong)" };
   return (
     <div className="flex flex-col items-center">
-      <AgentBox node={node} {...h} />
+      <AgentBox node={node} isRoot={isRoot} {...h} />
       {node.children.length > 0 && (
         <>
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px" style={lineStyle} />
           {node.children.length > 1 && (
             <div
-              className="h-px bg-border"
-              style={{ width: `calc(${node.children.length} * 200px + ${(node.children.length - 1) * 32}px)` }}
+              className="h-px"
+              style={{
+                ...lineStyle,
+                width: `calc(${node.children.length} * 200px + ${(node.children.length - 1) * 32}px)`,
+              }}
             />
           )}
           <div className="flex items-start gap-8">
             {node.children.map((child) => (
               <div key={child.agent.id} className="flex flex-col items-center" style={{ minWidth: 200 }}>
-                {node.children.length > 0 && <div className="h-6 w-px bg-border" />}
+                {node.children.length > 0 && <div className="h-6 w-px" style={lineStyle} />}
                 <TreeNodeView node={child} {...h} />
               </div>
             ))}
@@ -233,6 +285,7 @@ function TreeNodeView({ node, ...h }: { node: TreeNode } & NodeHandlers) {
 
 function AgentBox({
   node,
+  isRoot = false,
   draggingId,
   forbidden,
   dropHover,
@@ -242,11 +295,16 @@ function AgentBox({
   onDropNode,
   onSelect,
   onDelegate,
-}: { node: TreeNode } & NodeHandlers) {
+}: { node: TreeNode; isRoot?: boolean } & NodeHandlers) {
   const agent = node.agent;
   const isDragging = draggingId === agent.id;
   const isInvalidTarget = draggingId && (forbidden.has(agent.id) || draggingId === agent.id);
   const isDropTarget = dropHover === agent.id && draggingId && !isInvalidTarget;
+
+  // Non-root cards get a left stripe colored by status so the color
+  // actually means something. Idle cards show a hairline border stripe
+  // instead — keeps the layout consistent without adding visual noise.
+  const stripe = isRoot ? null : stripeFor(agent.status);
 
   return (
     <div
@@ -277,14 +335,41 @@ function AgentBox({
         e.stopPropagation();
         onSelect(agent);
       }}
-      className={`relative w-[200px] cursor-grab rounded-lg border bg-card px-3 py-2.5 shadow-sm transition-all active:cursor-grabbing hover:border-primary/60 hover:shadow-md ${
+      style={{
+        boxShadow: isDropTarget ? undefined : "0 1px 6px rgba(18,25,43,0.08)",
+        transition:
+          "box-shadow 150ms cubic-bezier(0.2,0.7,0.2,1), transform 150ms cubic-bezier(0.2,0.7,0.2,1), border-color 150ms",
+      }}
+      className={`group relative w-[200px] cursor-grab overflow-hidden rounded-xl border bg-card pl-5 pr-3 py-3 active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(18,25,43,0.10)] ${
         isDragging ? "opacity-40" : ""
       } ${
-        isDropTarget ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border"
+        isDropTarget ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border hover:border-[color:var(--border-strong)]"
       } ${
         isInvalidTarget ? "opacity-30" : ""
       }`}
     >
+      {/* Accent stripe on the left edge. Root cards show the three-color
+          motif; non-root cards show a single rotating accent. */}
+      {isRoot ? (
+        <div
+          aria-hidden
+          className="absolute left-0 top-0 bottom-0 flex flex-col"
+          style={{ width: 4 }}
+        >
+          <span style={{ flex: 1, background: "#F6C94E" }} />
+          <span style={{ flex: 1, background: "#2BBFAD" }} />
+          <span style={{ flex: 1, background: "#7B52E8" }} />
+        </div>
+      ) : (
+        <div
+          aria-hidden
+          className="absolute left-0 top-0 bottom-0"
+          style={{
+            width: stripe ? 3 : 1,
+            background: stripe ?? "var(--border)",
+          }}
+        />
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{agent.name}</div>

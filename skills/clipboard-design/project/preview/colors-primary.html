@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Primary Colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .wrap{width:700px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;}
+  .sw{border-radius:var(--radius-lg);padding:22px 20px 18px;min-height:160px;display:flex;flex-direction:column;justify-content:flex-end;}
+  .name{font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:-0.01em;}
+  .hex{font-family:var(--font-mono);font-size:10px;margin-top:3px;letter-spacing:0.1em;}
+  .note{font-family:var(--font-sans);font-size:11px;margin-top:8px;font-weight:300;}
+</style>
+</head>
+<body class="cb">
+<div class="wrap">
+  <div class="sw" style="background:#12192B;color:#fff;grid-row:span 1;">
+    <div class="name">Navy</div>
+    <div class="hex" style="color:rgba(255,255,255,0.45)">#12192B</div>
+    <div class="note" style="color:rgba(255,255,255,0.4)">Primary · dominant surface</div>
+  </div>
+  <div class="sw" style="background:#F6C94E;color:#12192B;">
+    <div class="name">Yellow</div>
+    <div class="hex" style="color:rgba(18,25,43,0.4)">#F6C94E</div>
+    <div class="note" style="color:rgba(18,25,43,0.5)">CTAs · contracts</div>
+  </div>
+  <div class="sw" style="background:#7B52E8;color:#fff;">
+    <div class="name">Violet</div>
+    <div class="hex" style="color:rgba(255,255,255,0.45)">#7B52E8</div>
+    <div class="note" style="color:rgba(255,255,255,0.5)">Agents · automation</div>
+  </div>
+  <div class="sw" style="background:#2BBFAD;color:#fff;">
+    <div class="name">Teal</div>
+    <div class="hex" style="color:rgba(255,255,255,0.45)">#2BBFAD</div>
+    <div class="note" style="color:rgba(255,255,255,0.5)">Live · success</div>
+  </div>
+</div>
+</body>
+</html>

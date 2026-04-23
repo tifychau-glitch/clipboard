@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Form Inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .card{width:700px;background:#fff;border:1px solid var(--cb-border);border-radius:var(--radius-xl);padding:28px 36px;display:flex;flex-direction:column;gap:14px;}
+  label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cb-muted);display:block;margin-bottom:6px;}
+  .input{width:100%;border:1px solid var(--cb-border);background:#fff;border-radius:10px;padding:12px 14px;font-family:var(--font-sans);font-size:14px;color:var(--cb-navy);outline:none;}
+  .input:focus{border-color:#7B52E8;box-shadow:0 0 0 3px rgba(123,82,232,0.2);}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .select{position:relative;}
+  .select::after{content:"";position:absolute;right:14px;top:50%;width:8px;height:8px;border-right:2px solid #8B90A7;border-bottom:2px solid #8B90A7;transform:translateY(-70%) rotate(45deg);}
+</style>
+</head>
+<body class="cb">
+<div class="card">
+  <div class="row">
+    <div>
+      <label>Agent name</label>
+      <input class="input" value="Follow-Up Bot" />
+    </div>
+    <div class="select">
+      <label>Template</label>
+      <input class="input" value="TC Firm · Creative Finance" readonly />
+    </div>
+  </div>
+  <div>
+    <label>Trigger</label>
+    <input class="input" placeholder="When a new lead arrives in Gmail…" style="border:1px solid #7B52E8;box-shadow:0 0 0 3px rgba(123,82,232,0.2);" />
+  </div>
+</div>
+</body>
+</html>

@@ -31,6 +31,10 @@ import {
   type HeartbeatRun,
 } from "../lib/types";
 import { StatusBadge } from "../components/StatusBadge";
+import { LogoMark } from "../components/LogoMark";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { MonoLabel } from "../components/ui/mono-label";
 
 export function AgentDetailPage() {
   const { id = "" } = useParams();
@@ -109,36 +113,85 @@ export function AgentDetailPage() {
   const isPendingApproval = a.status === "pending_approval";
 
   return (
-    <div className="space-y-8">
-      <div>
-        <Link
-          to="/agents"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" /> All agents
-        </Link>
-      </div>
+    <div className="space-y-6">
+      <Link
+        to="/agents"
+        className="inline-flex items-center gap-1.5 transition-colors hover:text-[color:var(--foreground)]"
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+          color: "var(--muted-foreground)",
+        }}
+      >
+        <ArrowLeft size={12} strokeWidth={2} /> Back to agents
+      </Link>
 
+      {/* Agent hero: navy square with the mark, name + metadata, action buttons. */}
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold">{a.name}</h1>
-          {a.title && <div className="mt-1 text-muted-foreground">{a.title}</div>}
-          <div className="mt-3 flex items-center gap-2">
-            <StatusBadge status={a.status} />
-            <span className="text-xs text-muted-foreground">
-              Last active {formatRelativeTime(a.lastHeartbeatAt)}
-            </span>
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div
+            className="flex shrink-0 items-center justify-center rounded-xl"
+            style={{ width: 52, height: 52, background: "#12192B" }}
+          >
+            <LogoMark size={30} variant="dark" title="" />
+          </div>
+          <div className="min-w-0">
+            <h1
+              className="truncate"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 800,
+                fontSize: 26,
+                letterSpacing: "-0.025em",
+                color: "var(--foreground)",
+                margin: 0,
+                lineHeight: 1.1,
+              }}
+            >
+              {a.name}
+            </h1>
+            {a.title && (
+              <div
+                className="mt-1 truncate"
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 13,
+                  color: "var(--muted-foreground)",
+                }}
+              >
+                {a.title}
+              </div>
+            )}
+            <div className="mt-2 flex items-center gap-2">
+              <StatusBadge status={a.status} />
+              <MonoLabel tone="muted">
+                {formatRelativeTime(a.lastHeartbeatAt)}
+              </MonoLabel>
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Pencil size={14} />}
             onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent"
           >
-            <Pencil className="size-3.5" /> Edit
-          </button>
+            Edit
+          </Button>
           {isPendingApproval ? (
-            <button
+            <Button
+              variant="violet"
+              size="sm"
+              leftIcon={
+                approve.isPending ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Check size={14} />
+                )
+              }
               onClick={() => approve.mutate()}
               disabled={approve.isPending || !pendingApprovalId}
               title={
@@ -146,38 +199,39 @@ export function AgentDetailPage() {
                   ? "No pending approval record found for this agent."
                   : undefined
               }
-              className="inline-flex items-center gap-1.5 rounded-md border border-green-500/40 bg-green-500/10 px-3 py-1.5 text-sm text-green-400 hover:bg-green-500/20 disabled:opacity-50"
             >
-              {approve.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Check className="size-3.5" />
-              )}
               Approve
-            </button>
+            </Button>
           ) : isPaused ? (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Play size={14} />}
               onClick={() => resume.mutate()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent"
             >
-              <Play className="size-3.5" /> Resume
-            </button>
+              Resume
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Pause size={14} />}
               onClick={() => pause.mutate()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent"
             >
-              <Pause className="size-3.5" /> Pause
-            </button>
+              Pause
+            </Button>
           )}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Trash2 size={14} />}
             onClick={() => {
               if (confirm(`Remove agent "${a.name}"?`)) remove.mutate();
             }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+            className="!text-[#DC2626] hover:!border-[#DC2626] hover:!bg-[#FEE2E2]"
           >
-            <Trash2 className="size-3.5" /> Delete
-          </button>
+            Delete
+          </Button>
         </div>
       </header>
 

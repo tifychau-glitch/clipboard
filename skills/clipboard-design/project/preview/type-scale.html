@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Type — Scale</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:var(--cb-bg);}
+  .card{width:700px;height:340px;background:#fff;border:1px solid var(--cb-border);border-radius:var(--radius-xl);padding:28px 36px;display:grid;grid-template-columns:auto 1fr;row-gap:14px;column-gap:20px;align-items:baseline;}
+  .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cb-muted);width:80px;}
+  .spec{font-family:var(--font-mono);font-size:9px;color:var(--cb-muted);letter-spacing:0.08em;}
+  .row{display:flex;align-items:baseline;gap:12px;}
+  .sample{color:var(--cb-navy);}
+</style>
+</head>
+<body class="cb">
+<div class="card">
+  <div class="tag">H1</div>
+  <div class="row"><span class="sample" style="font-family:var(--font-display);font-weight:800;font-size:48px;letter-spacing:-0.035em;line-height:1;">clipboard</span><span class="spec">Bricolage 800 / 48px / -0.035em</span></div>
+  <div class="tag">H2</div>
+  <div class="row"><span class="sample" style="font-family:var(--font-display);font-weight:700;font-size:32px;letter-spacing:-0.025em;line-height:1;">Section heading</span><span class="spec">Bricolage 700 / 32px</span></div>
+  <div class="tag">H3</div>
+  <div class="row"><span class="sample" style="font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-0.02em;">Card title</span><span class="spec">Bricolage 600 / 20px</span></div>
+  <div class="tag">Body L</div>
+  <div class="row"><span style="font-family:var(--font-sans);font-weight:300;font-size:17px;color:var(--cb-muted-2);">Agents that run your back office.</span><span class="spec">DM Sans 300 / 17px</span></div>
+  <div class="tag">Body</div>
+  <div class="row"><span style="font-family:var(--font-sans);font-weight:400;font-size:15px;color:var(--cb-muted-2);">Standard paragraph copy for product surfaces.</span><span class="spec">DM Sans 400 / 15px</span></div>
+  <div class="tag">Label</div>
+  <div class="row"><span style="font-family:var(--font-mono);font-weight:500;font-size:10px;color:var(--cb-muted);letter-spacing:0.15em;text-transform:uppercase;">Agent status · active</span><span class="spec">DM Mono 500 / 10px</span></div>
+</div>
+</body>
+</html>
