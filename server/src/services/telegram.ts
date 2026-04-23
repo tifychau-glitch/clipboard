@@ -227,6 +227,84 @@ async function ensureWebhookSecret(db: Db, integration: IntegrationRow): Promise
   return secret;
 }
 
+// ─── @agent mention routing ──────────────────────────────────────────────
+//
+// Messages can start with @name (or @role) to override the default agent.
+//   "@designer make me a banner"  → wakes Designer, drops the @mention
+//                                   from the forwarded prompt
+//   "@reid should we pivot?"      → wakes the CEO on its configured model
+//   "plan the launch"             → no mention, falls back to default agent
+//
+// This is the manual-router escape hatch. The Haiku auto-router is v2
+// work — for now the operator makes the routing call explicitly when
+// they want to skip the CEO overhead.
+
+type MentionResolution =
+  | {
+      kind: "ok";
+      agent: { id: string; name: string; status: string };
+      prompt: string;
+      mention: string | null;
+    }
+  | { kind: "unknown_mention"; mention: string }
+  | { kind: "no_default" };
+
+async function resolveTargetAgent(
+  db: Db,
+  companyId: string,
+  rawText: string,
+  defaultAgentId: string | null,
+): Promise<MentionResolution> {
+  const text = rawText.trimStart();
+  const mentionMatch = /^@([A-Za-z0-9_-]+)\s*(.*)$/s.exec(text);
+
+  if (mentionMatch) {
+    const mention = mentionMatch[1].toLowerCase();
+    const prompt = mentionMatch[2].trim();
+    // Match on name or role, case-insensitive. Prefer exact-name match over
+    // role match so "@Iris" wakes the Iris agent even when a generic role
+    // also matches.
+    const candidates = await db
+      .select({
+        id: agents.id,
+        name: agents.name,
+        role: agents.role,
+        status: agents.status,
+      })
+      .from(agents)
+      .where(eq(agents.companyId, companyId));
+
+    const byName = candidates.find(
+      (a) => a.name.toLowerCase() === mention,
+    );
+    const byRole = byName
+      ? null
+      : candidates.find((a) => a.role.toLowerCase() === mention);
+    const target = byName ?? byRole;
+
+    if (!target) {
+      return { kind: "unknown_mention", mention };
+    }
+    return {
+      kind: "ok",
+      agent: { id: target.id, name: target.name, status: target.status },
+      prompt: prompt.length > 0 ? prompt : rawText, // empty prompt after @ — fall back to the raw message
+      mention,
+    };
+  }
+
+  if (!defaultAgentId) return { kind: "no_default" };
+
+  const def = await db
+    .select({ id: agents.id, name: agents.name, status: agents.status })
+    .from(agents)
+    .where(and(eq(agents.id, defaultAgentId), eq(agents.companyId, companyId)))
+    .then((rows) => rows[0] ?? null);
+
+  if (!def) return { kind: "no_default" };
+  return { kind: "ok", agent: def, prompt: rawText, mention: null };
+}
+
 // ─── Update processing (shared between polling + webhook ingest) ─────────
 
 export async function processUpdate(
@@ -258,36 +336,35 @@ export async function processUpdate(
     return;
   }
 
-  if (!integration.defaultAgentId) {
+  const resolution = await resolveTargetAgent(
+    db,
+    integration.companyId,
+    message.text,
+    integration.defaultAgentId,
+  );
+
+  if (resolution.kind === "no_default") {
     await sendMessage(
       integration.botToken!,
       message.chat.id,
-      "No default agent is set. Open Clipboard → Settings → Integrations to pick one.",
+      "No default agent is set. Open Clipboard → Settings → Integrations to pick one, or prefix your message with @agentname.",
       message.message_id,
     );
     return;
   }
 
-  const agent = await db
-    .select({ id: agents.id, name: agents.name, status: agents.status })
-    .from(agents)
-    .where(
-      and(
-        eq(agents.id, integration.defaultAgentId),
-        eq(agents.companyId, integration.companyId),
-      ),
-    )
-    .then((rows) => rows[0] ?? null);
-
-  if (!agent) {
+  if (resolution.kind === "unknown_mention") {
     await sendMessage(
       integration.botToken!,
       message.chat.id,
-      "Default agent not found. Open Clipboard → Settings → Integrations to fix it.",
+      `No agent named "${resolution.mention}". Use an exact agent name or role, or drop the @ to send to the default agent.`,
       message.message_id,
     );
     return;
   }
+
+  const agent = resolution.agent;
+  const prompt = resolution.prompt;
 
   const heartbeat = heartbeatService(db);
   try {
@@ -298,19 +375,23 @@ export async function processUpdate(
       // to the original message. contextSnapshot would be cleaner but the
       // heartbeat scheduler rewrites it downstream.
       triggerDetail: encodeTriggerDetail(message.chat.id, message.message_id),
-      reason: "Telegram message",
+      reason: resolution.mention
+        ? `Telegram message (@${resolution.mention})`
+        : "Telegram message",
       payload: {
-        prompt: message.text,
+        prompt,
         source: "telegram",
         chatId: message.chat.id,
         messageId: message.message_id,
         senderId,
         senderUsername: message.from.username ?? null,
+        mention: resolution.mention,
       },
       contextSnapshot: {
         triggeredBy: "telegram",
         telegramSenderId: senderId,
         telegramChatId: message.chat.id,
+        telegramMention: resolution.mention,
       },
     });
     const runId = run?.id ?? null;

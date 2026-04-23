@@ -57,6 +57,12 @@ export type Agent = {
   pausedAt: string | null;
   lastHeartbeatAt: string | null;
   daemonDeviceKey: string | null;
+  permissions:
+    | {
+        canCreateAgents?: boolean;
+        [key: string]: unknown;
+      }
+    | null;
   createdAt: string;
   updatedAt: string;
   urlKey: string;

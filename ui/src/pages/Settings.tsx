@@ -653,8 +653,10 @@ function IntegrationsTab() {
             <div className="text-sm font-medium">Telegram</div>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Message your agents from your phone. Texts route to the default
-              agent and the run shows up in Tasks. Voice messages and per-agent
-              addressing come next.
+              agent unless you prefix with <code className="rounded bg-muted px-1 py-0.5 text-[10px]">@agent</code>{" "}
+              — e.g. <span className="font-mono text-[11px]">@designer make me a banner</span>{" "}
+              goes straight to Designer and skips the CEO. Voice messages
+              come next.
             </p>
           </div>
         </div>
