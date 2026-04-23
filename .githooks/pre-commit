@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: typecheck the UI workspace.
+#
+# Background: The Railway production build runs `pnpm --filter
+# @paperclipai/ui build`, which invokes `tsc -b` in strict mode. Vite's
+# dev server is permissive about missing types (it only type-checks what
+# a module imports at runtime), so UI type errors can sit locally for
+# hours, pass dev testing, and then blow up the deploy. This hook runs
+# the same `tsc -b` that production runs, so every push is pre-certified.
+#
+# Scope: UI only. Server/shared/db typecheck is available via
+# `pnpm typecheck` at the root; not worth the extra time on every
+# commit. UI is where ~all of our recent type breakages have been.
+#
+# Skip rules:
+# - No TS/TSX files staged → skip entirely (so docs-only commits stay fast)
+# - `git commit --no-verify` still bypasses this, as with any git hook
+set -e
+
+# Only run if something TS/TSX is actually changing.
+staged_ts=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)
+if [ -z "$staged_ts" ]; then
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+echo "==> Pre-commit typecheck (UI)..."
+if ! pnpm --filter @paperclipai/ui exec tsc -b 2>&1; then
+  echo ""
+  echo "==> Typecheck FAILED. Fix the errors above, or re-run with"
+  echo "    'git commit --no-verify' to bypass (not recommended before a push)."
+  exit 1
+fi
+echo "==> Typecheck OK."
