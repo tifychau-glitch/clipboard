@@ -3,7 +3,7 @@
 delegate.py — agent-to-agent task delegation for Clipboard / Paperclip.
 
 Usage (from inside a running agent task):
-  python3 /Users/tiffanychau/Downloads/paperclip-claude/scripts/delegate.py \
+  python3 /Users/tiffanychau/Downloads/clipboard/scripts/delegate.py \
     --to "CMO" --task "Write a product launch tweet thread" --from "CEO"
 
 Guardrails enforced:

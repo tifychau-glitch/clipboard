@@ -21,7 +21,7 @@ Paperclip UI running unmodified on port 3101 — kept for reference.
 
 | Project | Path | Port | Instance ID |
 |---------|------|------|-------------|
-| Clipboard (our custom UI + lightly-extended backend) | `~/Downloads/paperclip-claude/` | 3100 backend / 5173 or 5180 UI | `default` |
+| Clipboard (our custom UI + lightly-extended backend) | `~/Downloads/clipboard/` | 3100 backend / 5173 or 5180 UI | `default` |
 | Paperclip Copy (original UI) | `~/Downloads/paperclip-copy/` | 3101 | `paperclip-copy` |
 | AIOS (Iris accountability system) | `~/Downloads/AIOS/` | — | n/a |
 
@@ -35,7 +35,7 @@ See `DEPLOY.md` for env-var setup.
 ### How to start Clipboard
 
 ```bash
-cd ~/Downloads/paperclip-claude && pnpm dev
+cd ~/Downloads/clipboard && pnpm dev
 # Open http://localhost:5173 (or :5180 if Iris dashboard is grabbing 5173)
 ```
 
@@ -540,7 +540,7 @@ lives in `DEPLOY.md`; the highlights worth knowing here:
 2. **Event triggers** (`mention`, `comment`, `status_change`, `dependency_resolved`) require a backend dispatcher if we ever want them to actually work. Currently the UI doesn't pretend to support them.
 3. **Subscription budget caps** don't enforce. If a real cap is needed for subscription-covered runs, the backend would need to track imputed spend (the `api-equivalent` cost Paperclip already computes) or we'd need to implement a token-count cap instead of a dollar cap.
 4. **CEO/CTO/CMO** (created via old Paperclip hire flow) use Paperclip's managed instructions bundle instead of Clipboard's custom `promptTemplate`. The `delegationContext` sync still writes to their `metadata`, but to render it in the prompt they need their `promptTemplate` updated via an Edit on their detail page. Any agent created via Clipboard's Add Agent dialog is already wired correctly.
-5. **`VITE_CLIPBOARD_ROOT`** — for portability to other machines, set this in `ui/.env.local` to the absolute path of the Clipboard repo. Falls back to `/Users/tiffanychau/Downloads/paperclip-claude` if not set.
+5. **`VITE_CLIPBOARD_ROOT`** — for portability to other machines, set this in `ui/.env.local` to the absolute path of the Clipboard repo. Falls back to `/Users/tiffanychau/Downloads/clipboard` if not set.
 
 ---
 

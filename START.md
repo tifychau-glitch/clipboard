@@ -10,7 +10,7 @@ http://127.0.0.1:3100
 ## Start
 
 ```bash
-cd ~/Downloads/paperclip-claude
+cd ~/Downloads/clipboard
 pnpm dev
 ```
 

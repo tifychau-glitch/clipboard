@@ -8,7 +8,7 @@ import type { Agent } from "./types";
 // Fallback: Tiffany's dev-install path so the app keeps working out-of-the-box
 // on the original machine. When both are empty, emit the literal placeholder
 // "[PROJECT_ROOT]/scripts/delegate.py" as a last resort.
-const DEFAULT_CLIPBOARD_ROOT = "/Users/tiffanychau/Downloads/paperclip-claude";
+const DEFAULT_CLIPBOARD_ROOT = "/Users/tiffanychau/Downloads/clipboard";
 
 function resolveClipboardRoot(): string {
   // `import.meta.env` is populated by Vite at build time. The UI tsconfig
