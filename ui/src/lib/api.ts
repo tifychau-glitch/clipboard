@@ -55,6 +55,8 @@ export const api = {
   listCompanies: () => request<Company[]>("/companies"),
   createCompany: (body: { name: string; description?: string }) =>
     request<Company>("/companies", { method: "POST", body: JSON.stringify(body) }),
+  deleteCompany: (companyId: string) =>
+    request<{ ok: boolean }>(`/companies/${companyId}`, { method: "DELETE" }),
 
   // First-signup bootstrap. Safe to call on every sign-in — the server
   // responds 200/409 idempotently. See server/src/routes/bootstrap.ts.
@@ -70,10 +72,13 @@ export const api = {
   listAgents: (companyId: string) =>
     request<Agent[]>(`/companies/${companyId}/agents`),
   createAgent: (companyId: string, body: Record<string, unknown>) =>
-    request<Agent>(`/companies/${companyId}/agents`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+    request<{ agent: Agent; approval: unknown | null }>(
+      `/companies/${companyId}/agent-hires`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    ),
   getAgent: (agentId: string) => request<Agent>(`/agents/${agentId}`),
   updateAgent: (agentId: string, patch: Record<string, unknown>) =>
     request<Agent>(`/agents/${agentId}`, {

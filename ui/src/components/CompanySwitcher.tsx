@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Loader2, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Plus, Trash2, X } from "lucide-react";
 import { api } from "../lib/api";
 import {
+  clearActiveCompanyId,
   setActiveCompanyId,
   useCompanies,
   useDefaultCompany,
 } from "../lib/company";
+import type { Company } from "../lib/types";
 
 export function CompanySwitcher() {
   const companies = useCompanies();
   const active = useDefaultCompany();
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [deleting, setDeleting] = useState<Company | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,17 +53,32 @@ export function CompanySwitcher() {
             <ul className="max-h-72 overflow-auto py-1">
               {companies.data?.map((c) => {
                 const isActive = c.id === active.data?.id;
+                const canDelete = !isActive && (companies.data?.length ?? 0) > 1;
                 return (
-                  <li key={c.id}>
+                  <li key={c.id} className="group relative">
                     <button
                       onClick={() => onPick(c.id)}
-                      className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-accent ${
+                      className={`flex w-full items-center justify-between gap-2 px-3 py-2 pr-9 text-left text-sm transition-colors hover:bg-accent ${
                         isActive ? "bg-accent/60" : ""
                       }`}
                     >
                       <span className="truncate">{c.name}</span>
                       {isActive && <Check className="size-3.5 text-primary" />}
                     </button>
+                    {canDelete && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpen(false);
+                          setDeleting(c);
+                        }}
+                        title={`Delete ${c.name}`}
+                        aria-label={`Delete ${c.name}`}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    )}
                   </li>
                 );
               })}
@@ -84,7 +102,108 @@ export function CompanySwitcher() {
       </div>
 
       {adding && <NewCompanyDialog onClose={() => setAdding(false)} />}
+      {deleting && (
+        <DeleteCompanyDialog
+          company={deleting}
+          onClose={() => setDeleting(null)}
+        />
+      )}
     </>
+  );
+}
+
+function DeleteCompanyDialog({
+  company,
+  onClose,
+}: {
+  company: Company;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [confirmText, setConfirmText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = useMutation({
+    mutationFn: () => api.deleteCompany(company.id),
+    onSuccess: () => {
+      clearActiveCompanyId();
+      qc.invalidateQueries({ queryKey: ["companies"] });
+      qc.invalidateQueries({ queryKey: ["activeCompany"] });
+      onClose();
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+  });
+
+  const matches = confirmText.trim() === company.name;
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!matches) return;
+    remove.mutate();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-lg border border-border bg-card shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <h2 className="text-base font-semibold">Delete business</h2>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <form onSubmit={onSubmit} className="space-y-4 px-5 py-4">
+          <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            This permanently deletes <strong>{company.name}</strong> and all of
+            its agents, tasks, secrets, skills, and activity. This cannot be
+            undone.
+          </div>
+          <label className="block">
+            <div className="mb-1.5 text-sm font-medium">
+              Type <span className="font-mono">{company.name}</span> to confirm
+            </div>
+            <input
+              autoFocus
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={company.name}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </label>
+          {error && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-2 border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!matches || remove.isPending}
+              className="inline-flex items-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {remove.isPending && <Loader2 className="size-4 animate-spin" />}
+              Delete business
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 

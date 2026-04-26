@@ -49,6 +49,11 @@ export function setActiveCompanyId(id: string) {
   notify();
 }
 
+export function clearActiveCompanyId() {
+  writeStored(null);
+  notify();
+}
+
 export function useActiveCompanyId(): string | null {
   return useSyncExternalStore(subscribe, readStored, () => null);
 }

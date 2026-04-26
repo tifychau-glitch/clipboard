@@ -86,7 +86,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <aside
-      className="flex flex-col flex-shrink-0 w-[232px] h-dvh sticky top-0"
+      className="flex flex-col flex-shrink-0 w-[232px] h-dvh sticky top-0 z-30"
       style={{
         background: "var(--color-clipboard-navy)",
         borderRight: "1px solid rgba(255,255,255,0.05)",

@@ -84,7 +84,7 @@ export function AgentDetailPage() {
     mutationFn: () => api.approveApproval(pendingApprovalId!),
     onSuccess: () => {
       invalidate();
-      qc.invalidateQueries({ queryKey: ["pendingApprovals"] });
+      qc.invalidateQueries({ queryKey: ["pendingApprovals"], refetchType: "all" });
     },
   });
 

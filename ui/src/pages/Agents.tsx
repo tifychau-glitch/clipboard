@@ -157,8 +157,8 @@ function AgentCard({
 }) {
   const qc = useQueryClient();
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["agents"] });
-    qc.invalidateQueries({ queryKey: ["pendingApprovals"] });
+    qc.invalidateQueries({ queryKey: ["agents"], refetchType: "all" });
+    qc.invalidateQueries({ queryKey: ["pendingApprovals"], refetchType: "all" });
   };
 
   const pause = useMutation({

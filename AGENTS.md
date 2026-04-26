@@ -7,18 +7,23 @@ Guidance for human and AI contributors working in this repository.
 Paperclip is a control plane for AI-agent companies.
 The current implementation target is V1 and is defined in `doc/SPEC-implementation.md`.
 
-## 2. Read This First
+## 2. Reference Docs (read on demand only)
 
-Before making changes, read in this order:
+Do NOT preemptively read the doc set. Read only the file that matches the task at hand:
 
-1. `doc/GOAL.md`
-2. `doc/PRODUCT.md`
-3. `doc/SPEC-implementation.md`
-4. `doc/DEVELOPING.md`
-5. `doc/DATABASE.md`
+| Task | File |
+|---|---|
+| Need product vision / "why" | `doc/GOAL.md` (55 lines) |
+| Need user-facing product framing | `doc/PRODUCT.md` (146 lines) |
+| Changing behavior or adding features | `doc/SPEC-implementation.md` (V1 build contract) |
+| Dev environment or command questions | `doc/DEVELOPING.md` |
+| Schema or migration work | `doc/DATABASE.md` |
+| Long-horizon product context | `doc/SPEC.md` (rarely needed) |
 
-`doc/SPEC.md` is long-horizon product context.
-`doc/SPEC-implementation.md` is the concrete V1 build contract.
+Rules of thumb:
+- Small bug fix or localized change — sections 3-11 of this file are usually enough; skip `doc/` entirely.
+- Behavior change — read the relevant doc section, not the whole file.
+- Never read all five docs unless the task genuinely spans them.
 
 ## 3. Repo Map
 

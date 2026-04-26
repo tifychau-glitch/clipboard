@@ -518,14 +518,14 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     return { proc, parsedStream, parsed };
   };
 
-  const toAdapterResult = (
+  const toAdapterResult = async (
     attempt: {
       proc: RunProcessResult;
       parsedStream: ReturnType<typeof parseClaudeStreamJson>;
       parsed: Record<string, unknown> | null;
     },
     opts: { fallbackSessionId: string | null; clearSessionOnMissingSession?: boolean },
-  ): AdapterExecutionResult => {
+  ): Promise<AdapterExecutionResult> => {
     const { proc, parsedStream, parsed } = attempt;
     const loginMeta = detectClaudeLoginRequired({
       parsed,
@@ -577,6 +577,18 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
           outputTokens: asNumber(usageObj.output_tokens, 0),
         };
       })();
+
+    // Token-budget line. One per run, easy to grep: `grep "\[paperclip\] tokens"`.
+    // cache% = cache hit rate on input tokens. Higher is cheaper.
+    const usageInput = usage.inputTokens ?? 0;
+    const usageCached = usage.cachedInputTokens ?? 0;
+    const usageOutput = usage.outputTokens ?? 0;
+    const totalInput = usageInput + usageCached;
+    const cachePct = totalInput > 0 ? Math.round((usageCached / totalInput) * 100) : 0;
+    await onLog(
+      "stdout",
+      `[paperclip] tokens in=${usageInput} cached=${usageCached} (${cachePct}%) out=${usageOutput} bundle=${promptBundle.bundleKey.slice(0, 8)}\n`,
+    );
 
     const resolvedSessionId =
       parsedStream.sessionId ??
